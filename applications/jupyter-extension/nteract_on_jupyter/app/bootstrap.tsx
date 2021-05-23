@@ -16,6 +16,7 @@ import {
   makeStateRecord,
   makeTransformsRecord,
 } from "@nteract/core";
+import { initCollaboration } from "@nteract/mythic-rtc";
 import { Media } from "@nteract/outputs";
 import TransformVDOM from "@nteract/transform-vdom";
 import { ContentRecord, HostRecord } from "@nteract/types";
@@ -58,13 +59,13 @@ export async function main(
       version: `nteract-on-jupyter@${config.appVersion}`,
       host: jupyterHostRecord,
     }),
-    comms: makeCommsRecord(),
-    config: Immutable.Map({
-      theme: "light",
-    }),
+    // config: Immutable.Map({
+    //   theme: "light",
+    // }),
     core: makeStateRecord({
       currentKernelspecsRef: kernelspecsRef,
       entities: makeEntitiesRecord({
+        comms: makeCommsRecord(),
         hosts: makeHostsRecord({
           byRef: Immutable.Map<string, HostRecord>().set(
             hostRef,
@@ -141,6 +142,8 @@ export async function main(
 
   const store = configureStore(initialState);
   (window as any).store = store;
+
+  store.dispatch(initCollaboration.create({ store, backend: null, contentRef }));
 
   store.dispatch(
     actions.fetchContent({

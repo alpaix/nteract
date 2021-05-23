@@ -14,7 +14,7 @@ export const collaboration = createMythicPackage("collaboration")<ICollaboration
   }
 });
 
-export const initPackage = collaboration.createMyth("init")<{
+export const initCollaboration = collaboration.createMyth("init")<{
   store: any;
   backend: ICollaborationBackend;
   contentRef: ContentRef;

@@ -10,7 +10,10 @@ export class CollaborationDriver implements ICollaborationDriver {
     private readonly contentRef: ContentRef
   ) {}
 
-  joinSession(): Observable<MythicAction<string, string, {}>> {
+  join(): Observable<MythicAction<string, string, {}>> {
+    throw new Error("Method not implemented.");
+  }
+  leave(): Observable<MythicAction<string, string, {}>> {
     throw new Error("Method not implemented.");
   }
 }

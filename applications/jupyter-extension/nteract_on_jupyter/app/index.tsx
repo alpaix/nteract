@@ -15,6 +15,9 @@ import "@nteract/styles/monaco/overrides.css";
 import "@nteract/styles/global-variables.css";
 import "@nteract/styles/themes/base.css";
 import "@nteract/styles/themes/default.css";
+import "@nteract/styles/cell-menu.css";
+import "@nteract/styles/sidebar.css";
+import "@nteract/styles/toolbar.css";
 
 import "react-table/react-table.css";
 import urljoin from "url-join";

@@ -1,5 +1,4 @@
-export { collaboration } from "./package";
-export * from "./myths";
-export * from "./selectors";
+export { collaboration, initCollaboration } from "./package";
+export { joinSession, leaveSession } from "./myths";
 export { recordingMiddleware } from "./middleware";
 export { ICollaborationBackend } from "./types";

@@ -17,7 +17,8 @@ export interface ICollaborationBackend {
 }
 
 export interface ICollaborationDriver {
-  joinSession(): Observable<MythicAction>;
+  join(): Observable<MythicAction>;
+  leave(): Observable<MythicAction>;
 }
 
 export interface IActionRecorder {

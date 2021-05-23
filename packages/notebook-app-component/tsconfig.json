@@ -12,6 +12,7 @@
     { "path": "../editor" },
     { "path": "../mythic-configuration" },
     { "path": "../mythic-notifications" },
+    { "path": "../mythic-rtc" },
     { "path": "../presentational-components" },
     { "path": "../stateful-components" },
     { "path": "../selectors" },
