@@ -6,6 +6,11 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../myths" }
+    { "path": "../actions" },
+    { "path": "../commutable" },
+    { "path": "../core" },
+    { "path": "../myths" },
+    { "path": "../selectors" },
+    { "path": "../types" }
   ]
 }
