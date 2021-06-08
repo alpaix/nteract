@@ -5,7 +5,7 @@ import { CellId, createCodeCell } from "@nteract/commutable";
 import { AppState, ContentRef, NotebookModel } from "@nteract/types";
 import { MythicAction } from "@nteract/myths";
 import { selectors as coreSelectors, actions as coreActions } from "@nteract/core";
-import { SolidStore } from "../../store";
+// import { SolidStore } from "../../store";
 import { ICollaborationBackend } from "../types";
 import { getLocalCellId } from "../selectors";
 
@@ -13,7 +13,7 @@ export class ActionReplicator {
   constructor(
     private readonly actions$: Subject<MythicAction>,
     private readonly backend: ICollaborationBackend,
-    private readonly store: SolidStore,
+    private readonly store: any, // SolidStore,
     private readonly contentRef: ContentRef
   ) {}
 

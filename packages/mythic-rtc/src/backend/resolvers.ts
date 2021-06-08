@@ -1,5 +1,5 @@
 import { eachValueFrom } from "rxjs-for-await";
-import { CellOrderEvent, ISolidCell, ISolidModel } from "./types";
+import { CellOrderEvent, ISolidCell, ISolidModel } from "./model";
 
 const QueryResolver = {
   notebook: async (parent: any, args: { filePath: string }, context: { model: ISolidModel } /*, info: any*/) => {

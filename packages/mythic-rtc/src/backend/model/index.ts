@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { SharedString } from "@fluidframework/sequence";
-import { CellDef } from "../schema/types";
+import { CellDef } from "../schema";
 
 /**
  * Describes the public API surface for our Fluid DataObject.
