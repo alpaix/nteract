@@ -1,23 +1,21 @@
 import * as Immutable from "immutable";
 import { Observable } from "rxjs";
-import { DocumentNode, ExecutionResult, Source } from "graphql";
+import { DocumentNode, ExecutionResult } from "graphql";
 import { Maybe } from "graphql/jsutils/Maybe";
-import { MythicAction } from "@nteract/myths";
 import { ImmutableCell } from "@nteract/commutable";
+import { MythicAction } from "@nteract/myths";
 
 export interface ICollaborationBackend {
-  execute(document: DocumentNode, variableValues?: Maybe<{ [key: string]: any }>): Promise<ExecutionResult>;
+  execute(document: DocumentNode, variableValues?: Maybe<{ [key: string]: unknown }>): Promise<ExecutionResult>;
 
   subscribe(
     document: DocumentNode,
-    variableValues?: Maybe<{ [key: string]: any }>
+    variableValues?: Maybe<{ [key: string]: unknown }>
   ): Promise<AsyncIterableIterator<ExecutionResult>>;
-
-  runQuery(query: string | Source, variableValues?: any): Promise<ExecutionResult>;
 }
 
 export interface ICollaborationDriver {
-  join(): Observable<MythicAction>;
+  join(filePath: string): Observable<MythicAction>;
   leave(): Observable<MythicAction>;
 }
 

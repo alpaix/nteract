@@ -27,6 +27,7 @@
     "@nteract/jupyter-widgets": "^4.4.14",
     "@nteract/logos": "^1.0.0",
     "@nteract/monaco-editor": "^3.5.0",
+    "@nteract/mythic-rtc": "0.1.0",
     "@nteract/notebook-app-component": "^7.7.8",
     "@nteract/octicons": "^2.0.0",
     "@nteract/outputs": "^3.0.11",
@@ -56,6 +57,7 @@
     "webpack": "^4.17.2"
   },
   "devDependencies": {
+    "graphql-tag": "^2.12.4",
     "file-loader": "^6.0.0"
   }
 }

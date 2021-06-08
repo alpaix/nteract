@@ -1,0 +1,38 @@
+type Mutation {
+  insertCell(input: InsertCellInput!): Cell!
+  deleteCell(id: ID!): Boolean
+  patchCellSource(input: PatchCellSourceInput!): Boolean
+}
+
+input InsertCellInput {
+  insertAt: Int
+  cell: CellInput!
+}
+
+enum CellType {
+  code
+  markdown
+  raw
+}
+
+input CellInput {
+  id: ID!
+  cell_type: CellType!
+  source: String
+}
+
+enum DiffType {
+  insert
+  delete
+  replace
+}
+
+input PatchCellSourceInput {
+  id: ID!
+  type: DiffType!
+  diff: String
+  start1: Int
+  len1: Int
+  start2: Int
+  len2: Int
+}

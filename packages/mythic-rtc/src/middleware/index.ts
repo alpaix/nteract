@@ -3,7 +3,14 @@ import { CellId } from "@nteract/commutable";
 import { actions as coreActions, selectors as coreSelectors, AppState } from "@nteract/core";
 import { AnyAction, Dispatch, Store } from "redux";
 // import debug from "../common/debug";
-import { deleteCellFromMap, recordDeleteCell, recordCellContent, recordInsertCell, updateCellMap } from "../myths";
+import {
+  deleteCellFromMap,
+  recordDeleteCell,
+  recordCellContent,
+  recordInsertCell,
+  updateCellMap,
+  joinSession
+} from "../myths";
 
 const handleInsertCell = (action: coreActions.CreateCellAbove | coreActions.CreateCellBelow, state: AppState) => {
   // This seems to return the current focused cell, may be because the new cell
@@ -45,7 +52,7 @@ const handleInsertCell = (action: coreActions.CreateCellAbove | coreActions.Crea
   }
 };
 
-const handleDeleteCell = (action: coreActions.DeleteCell, state: AppState) => {
+const handleDeleteCell = (action: coreActions.DeleteCell) => {
   // This seems to return the current focused cell, may be because the new cell
   const { id, origin } = action.payload as any;
   if (id) {
@@ -60,7 +67,7 @@ const handleDeleteCell = (action: coreActions.DeleteCell, state: AppState) => {
   return null;
 };
 
-const handleCellContent = (action: coreActions.SetInCell<string>, state: AppState) => {
+const handleCellContent = (action: coreActions.SetInCell<string>) => {
   const { id, path, value, origin } = action.payload as any;
   if (origin !== "remote" && id && path && path[0] === "source") {
     return recordCellContent.create({ id, value });
@@ -74,21 +81,23 @@ const handleCellContent = (action: coreActions.SetInCell<string>, state: AppStat
  * The main purpose of the middleware is to gather all necessary information from the store
  * to successfully record an action by the myth.
  */
-export const recordingMiddleware = (store: Store<AppState>) => (next: Dispatch<AnyAction>) => (action: any) => {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const recordingMiddleware = (store: Store<AppState>) => (next: Dispatch<AnyAction>) => (action: AnyAction) => {
   const result = next(action);
 
   switch (action.type) {
-    case coreActions.CREATE_CELL_ABOVE:
+    case coreActions.FETCH_CONTENT_FULFILLED:
       {
-        const insertAction = handleInsertCell(action, store.getState());
-        if (insertAction) {
-          store.dispatch(insertAction);
+        const { filepath: filePath, origin } = action.payload;
+        if (origin !== "remote") {
+          store.dispatch(joinSession.create({ filePath }));
         }
       }
       break;
+    case coreActions.CREATE_CELL_ABOVE:
     case coreActions.CREATE_CELL_BELOW:
       {
-        const insertAction = handleInsertCell(action, store.getState());
+        const insertAction = handleInsertCell(action as any, store.getState());
         if (insertAction) {
           store.dispatch(insertAction);
         }
@@ -97,13 +106,13 @@ export const recordingMiddleware = (store: Store<AppState>) => (next: Dispatch<A
     case coreActions.MOVE_CELL:
       break;
     case coreActions.DELETE_CELL:
-      const deleteAction = handleDeleteCell(action, store.getState());
+      const deleteAction = handleDeleteCell(action as any);
       if (deleteAction) {
         store.dispatch(deleteAction);
       }
       break;
     case coreActions.SET_IN_CELL:
-      const contentAction = handleCellContent(action, store.getState());
+      const contentAction = handleCellContent(action as any);
       if (contentAction) {
         store.dispatch(contentAction);
       }

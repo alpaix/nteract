@@ -18,6 +18,7 @@
     { "path": "../../../packages/core" },
     { "path": "../../../packages/editor" },
     { "path": "../../../packages/monaco-editor" },
+    { "path": "../../../packages/mythic-rtc" },
     { "path": "../../../packages/notebook-app-component" },
     { "path": "../../../packages/presentational-components" },
     { "path": "../../../packages/styles" },

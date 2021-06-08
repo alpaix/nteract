@@ -16,12 +16,24 @@
   "devDependencies": {
   },
   "dependencies": {
+    "@fluidframework/aqueduct": "^0.39.3",
+    "@fluidframework/map": "^0.39.3",
+    "@fluidframework/react-inputs": "^0.39.3",
+    "@fluidframework/sequence": "^0.39.3",
+    "@fluidframework/view-interfaces": "^0.39.3",
+    "@graphql-tools/merge": "^6.2.14",
+    "@graphql-tools/schema": "^7.1.5",
     "@nteract/actions": "^7.0.10",
     "@nteract/commutable": "^7.4.4",
     "@nteract/core": "^15.1.8",
     "@nteract/myths": "^0.2.10",
     "@nteract/selectors": "^3.1.8",
-    "@nteract/types": "^7.1.8"
+    "@nteract/types": "^7.1.8",
+    "debug": "^4.3.2",
+    "graphql": "^15.5.0",
+    "graphql-tag": "^2.12.4",
+    "rxjs": "^6.3.3",
+    "rxjs-for-await": "^0.0.2"
   },
   "peerDependencies": {
     "immutable": "^4.0.0-rc.12"

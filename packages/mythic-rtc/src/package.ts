@@ -2,7 +2,8 @@ import * as Immutable from "immutable";
 import { ContentRef } from "@nteract/types";
 import { createMythicPackage } from "@nteract/myths";
 import { IActionRecorder, ICollaborationBackend, ICollaborationDriver, ICollaborationState } from "./types";
-import { ActionRecorder, CollaborationDriver } from "./services";
+import { ActionRecorder, CollaborationDriver } from "./driver";
+import { FluidBackend } from "./backend";
 
 export const collaboration = createMythicPackage("collaboration")<ICollaborationState>({
   initialState: {
@@ -16,11 +17,12 @@ export const collaboration = createMythicPackage("collaboration")<ICollaboration
 
 export const initCollaboration = collaboration.createMyth("init")<{
   store: any;
-  backend: ICollaborationBackend;
+  backend?: ICollaborationBackend;
   contentRef: ContentRef;
 }>({
   reduce: (state, action) => {
-    const { store: theAppStore, backend, contentRef } = action.payload;
+    const { store: theAppStore, contentRef } = action.payload;
+    const backend = action.payload.backend ?? new FluidBackend();
     const driver = new CollaborationDriver(backend, theAppStore, contentRef);
     const recorder = new ActionRecorder(backend, theAppStore);
     return state.set("driver", driver).set("recorder", recorder);

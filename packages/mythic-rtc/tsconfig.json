@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // "importsNotUsedAsValues": "error",
     "outDir": "lib",
-    "rootDir": "src"
+    "rootDir": "src",
   },
   "include": ["src"],
   "references": [

@@ -1,0 +1,113 @@
+"""
+The query root of Jupyter Notebook GraphQL interface.
+"""
+type Query {
+  """
+  Lookup a given notebook by the file path.
+  """
+  notebook(filePath: String!): Notebook
+}
+
+type Notebook {
+  """
+  List of cells
+  """
+  cells(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+  ): CellConnection!
+
+  """
+  Retrieve an individual cell given its unique ID
+  """
+  cell(id: ID!): Cell
+}
+
+interface ICell {
+  id: ID!
+  source: String
+}
+
+type CodeCell implements ICell {
+  id: ID!
+  source: String
+  output: Output
+}
+
+type MarkdownCell implements ICell {
+  id: ID!
+  source: String
+}
+
+type RawCell implements ICell {
+  id: ID!
+  source: String
+}
+
+union Cell = CodeCell | MarkdownCell | RawCell
+
+type Output {
+  media: String
+  text: String
+}
+
+"""
+An edge in a connection.
+"""
+type CellEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: Cell
+}
+
+type PageInfo {
+  a: String
+}
+
+"""
+The connection type for Cell.
+"""
+type CellConnection {
+  """
+  A list of edges.
+  """
+  edges: [CellEdge]
+
+  """
+  A list of nodes.
+  """
+  nodes: [Cell]
+
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  Identifies the total count of items in the connection.
+  """
+  totalCount: Int!
+}

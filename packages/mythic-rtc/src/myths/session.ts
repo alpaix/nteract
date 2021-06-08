@@ -1,7 +1,7 @@
 import { collaboration } from "../package";
 
-export const joinSession = collaboration.createMyth("join")<void>({
-  thenDispatch: [(action, state) => state.driver.join()]
+export const joinSession = collaboration.createMyth("join")<{ filePath: string }>({
+  thenDispatch: [(action, state) => state.driver.join(action.payload.filePath)]
 });
 
 export const leaveSession = collaboration.createMyth("leave")<void>({
