@@ -16,7 +16,7 @@ import {
   makeStateRecord,
   makeTransformsRecord,
 } from "@nteract/core";
-// import { initCollaboration } from "@nteract/mythic-rtc";
+import { initCollaboration } from "@nteract/mythic-rtc";
 import { Media } from "@nteract/outputs";
 import TransformVDOM from "@nteract/transform-vdom";
 import { ContentRecord, HostRecord } from "@nteract/types";
@@ -143,7 +143,7 @@ export async function main(
   const store = configureStore(initialState);
   (window as any).store = store;
 
-  // store.dispatch(initCollaboration.create({ store, backend: null, contentRef }));
+  store.dispatch(initCollaboration.create({ store, backend: null, contentRef }));
 
   store.dispatch(
     actions.fetchContent({

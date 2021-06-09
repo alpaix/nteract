@@ -20,6 +20,7 @@
     "@fluidframework/map": "^0.39.3",
     "@fluidframework/react-inputs": "^0.39.3",
     "@fluidframework/sequence": "^0.39.3",
+    "@fluidframework/test-runtime-utils": "^0.39.3",
     "@fluidframework/view-interfaces": "^0.39.3",
     "@graphql-tools/graphql-file-loader": "^6.2.7",
     "@graphql-tools/load": "^6.2.8",

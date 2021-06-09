@@ -1,7 +1,16 @@
 type Mutation {
+  upsertNotebook(input: UpsertNotebookInput!): UpsertNotebookPayload!
   insertCell(input: InsertCellInput!): Cell!
   deleteCell(id: ID!): Boolean
   patchCellSource(input: PatchCellSourceInput!): Boolean
+}
+
+input UpsertNotebookInput {
+  filePath: String!
+}
+
+type UpsertNotebookPayload {
+  notebook: Notebook
 }
 
 input InsertCellInput {

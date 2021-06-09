@@ -6,6 +6,7 @@ import { ImmutableCell } from "@nteract/commutable";
 import { MythicAction } from "@nteract/myths";
 
 export interface ICollaborationBackend {
+  start(filePath: string): Promise<void>;
   execute(document: DocumentNode, variableValues?: Maybe<{ [key: string]: unknown }>): Promise<ExecutionResult>;
 
   subscribe(

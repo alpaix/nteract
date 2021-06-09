@@ -48,7 +48,12 @@ module.exports = {
         publicPath: "/nteract/static/dist/",
       },
   node: {
-    fs: "empty"
+    child_process: "empty",
+    dgram: "empty",
+    fs: "empty",
+    module: "empty",
+    net: "empty",
+    tls: "empty"
   },
   module: {
     rules: [
@@ -86,7 +91,7 @@ module.exports = {
     ]
   },
   resolve: {
-    mainFields: ["nteractDesktop", "module", "main"],
+    mainFields: ["nteractDesktop", "browser", "module", "main"],
     extensions: [".ts", ".tsx", ".js"],
     alias: configurator.mergeDefaultAliases()
   },

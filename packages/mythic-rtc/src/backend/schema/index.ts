@@ -1,5 +1,9 @@
 import { Maybe } from "graphql/jsutils/Maybe";
 
+export interface UpsertNotebookInput {
+  filePath: string;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface InsertCellInput {}
 

@@ -17,9 +17,10 @@ export class CollaborationDriver implements ICollaborationDriver {
 
   join(filePath: string): Observable<MythicAction<string, string, {}>> {
     const actionStream = async (actions$: Subject<MythicAction>) => {
+      await this.backend.start(filePath);
+      await this.loadModel(filePath, actions$);
       const replicator = new ActionReplicator(actions$, this.backend, this.store, this.contentRef);
       replicator.subscribe();
-      await this.loadModel(actions$);
       actions$.next(joinSessionSucceeded.create());
       //actions$.complete();
     };
@@ -35,8 +36,24 @@ export class CollaborationDriver implements ICollaborationDriver {
   }
 
   //#region private
-  private async loadModel(actions$: Subject<MythicAction>) {
+  private async loadModel(filePath: string, actions$: Subject<MythicAction>) {
     try {
+      const mutation = gql`
+        mutation UpsertNotebook($input: UpsertNotebookInput!) {
+          upsertNotebook(input: $input) {
+            notebook {
+              id
+            }
+          }
+        }
+      `;
+      const upsert = await this.backend.execute(mutation, {
+        input: {
+          filePath
+        }
+      });
+      this.debug("Upserted notebook", upsert);
+
       const query = gql`
         query {
           notebook(filePath: "./Default.ipynb") {
@@ -59,7 +76,6 @@ export class CollaborationDriver implements ICollaborationDriver {
     }
   }
 
-  private createNotebook(actions$: Subject<MythicAction>, notebookData: any) {
-  }
+  private createNotebook(actions$: Subject<MythicAction>, notebookData: any) {}
   //#endregion
 }

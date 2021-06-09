@@ -1,30 +1,34 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { eachValueFrom } from "rxjs-for-await";
+import { ResolverContext } from "./context";
 import { CellOrderEvent, ISolidCell, ISolidModel } from "./model";
+import { UpsertNotebookInput } from "./schema";
 
 const QueryResolver = {
-  notebook: async (parent: any, args: { filePath: string }, context: { model: ISolidModel } /*, info: any*/) => {
+  notebook: async (parent: any, args: { filePath: string }, context: ResolverContext /*, info: any*/) => {
     return context.model;
   }
 };
 
 const MutationResolver = {
-  upsertNotebook: async (parent: any, { input }: any, context: { model: ISolidModel }) => {
-    const { cell, insertAt } = input;
-    const newCell = await context.model.insertCell(cell, insertAt);
-    return { id: newCell.id };
+  upsertNotebook: async (parent: unknown, { input }: { input: UpsertNotebookInput }, context: ResolverContext) => {
+    // const { filePath } = input;
+    await context.shell.upsertModel();
+    return { notebook: { id: "blah" } };
   },
-  insertCell: async (parent: any, { input }: any, context: { model: ISolidModel }) => {
+  insertCell: async (parent: any, { input }: any, context: ResolverContext) => {
     const { cell, insertAt } = input;
-    const newCell = await context.model.insertCell(cell, insertAt);
-    return { id: newCell.id };
+    const newCell = await context.model?.insertCell(cell, insertAt);
+    return { id: newCell?.id };
   },
-  deleteCell: (parent: any, { id: cellId }: any, context: { model: ISolidModel }) => {
-    context.model.deleteCell(cellId);
+  deleteCell: (parent: any, { id: cellId }: any, context: ResolverContext) => {
+    context.model?.deleteCell(cellId);
     return true;
   },
-  patchCellSource: async (parent: any, { input }: any, context: { model: ISolidModel }) => {
+  patchCellSource: async (parent: any, { input }: any, context: ResolverContext) => {
     const { id: cellId, diff } = input;
-    const cell = await context.model.getCell(cellId);
+    const cell = await context.model?.getCell(cellId);
     if (cell) {
       const ss = cell.getSource();
       ss.replaceText(0, ss.getLength(), diff);
@@ -35,7 +39,7 @@ const MutationResolver = {
 
 const SubscriptionResolver = {
   cellOrder: {
-    subscribe: (parent: any, args: any, context: { model: ISolidModel }) => {
+    subscribe: (parent: any, args: any, context: ResolverContext) => {
       const order$ = context.model.cells$;
       return eachValueFrom(order$);
     },
@@ -44,7 +48,7 @@ const SubscriptionResolver = {
     }
   },
   cellSource: {
-    subscribe: (parent: any, args: any, context: { model: ISolidModel }) => {
+    subscribe: (parent: any, args: any, context: ResolverContext) => {
       const source$ = context.model.source$;
       return eachValueFrom(source$);
     },
