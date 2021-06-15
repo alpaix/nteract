@@ -5,7 +5,9 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "nteractDesktop": "src/index.ts",
-  "scripts": {},
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='@nteract/presentational-components@${version}'"
+  },
   "dependencies": {
     "@blueprintjs/core": "^3.7.0",
     "@blueprintjs/select": "^3.2.0",
@@ -35,5 +37,25 @@
     "color-space": "^1.16.0",
     "css": "^3.0.0",
     "styled-components": "^5.0.1"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
   }
 }

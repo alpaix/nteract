@@ -14,7 +14,7 @@ describe("Outputs", () => {
         id={"cellId"}
         contentRef={"contentRef"}
         hidden
-        expanded={false}
+        scrolledValue={true}
         outputs={Immutable.List()}
       >
         <p>test</p>
@@ -22,13 +22,13 @@ describe("Outputs", () => {
     );
     expect(component.find(".hidden").length).not.toBe(0);
   });
-  it("sets expanded class when expanded prop is true", () => {
+  it("sets expanded class when scrolledValue prop is false", () => {
     const component = mount(
       <Outputs
         id={"cellId"}
         contentRef={"contentRef"}
         hidden={false}
-        expanded
+        scrolledValue={false}
         outputs={Immutable.List()}
       >
         <p>test</p>
@@ -36,13 +36,13 @@ describe("Outputs", () => {
     );
     expect(component.find(".expanded").length).not.toBe(0);
   });
-  it("does not set expanded class when expanded prop is false", () => {
+  it("does not set expanded class when scrolledValue prop is true", () => {
     const component = mount(
       <Outputs
         id={"cellId"}
         contentRef={"contentRef"}
         hidden={false}
-        expanded={false}
+        scrolledValue={true}
         outputs={Immutable.List()}
       >
         <p>test</p>
@@ -57,7 +57,7 @@ describe("makeMapStateToProps", () => {
     const state = mockAppState({});
     const ownProps = { contentRef: "aContentRef", id: "aCellId" };
     const result = makeMapStateToProps(state, ownProps)(state);
-    expect(result.expanded).toBe(false);
+    expect(result.scrolledValue).toBe("auto");
     expect(result.hidden).toBe(false);
     expect(result.outputs.size).toBe(0);
   });
@@ -72,6 +72,6 @@ describe("makeMapStateToProps", () => {
     const ownProps = { contentRef, id };
     const result = makeMapStateToProps(state, ownProps)(state);
     expect(result.hidden).toBe(false);
-    expect(result.expanded).toBe(false);
+    expect(result.scrolledValue).toBe("auto");
   });
 });

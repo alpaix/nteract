@@ -7,6 +7,9 @@
     "react",
     "nteract"
   ],
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='@nteract/stateful-components@${version}'"
+  },
   "author": "Safia Abdalla <safia@microsoft.com>",
   "homepage": "https://github.com/nteract/nteract/tree/master/packages/stateful-components#readme",
   "license": "BSD-3-Clause",
@@ -31,5 +34,25 @@
   },
   "devDependencies": {
     "react-markdown": "^4.3.1"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
   }
 }

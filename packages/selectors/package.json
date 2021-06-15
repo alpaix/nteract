@@ -4,7 +4,9 @@
   "description": "A colletion of state selectors",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "scripts": {},
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='@nteract/selectors@${version}'"
+  },
   "keywords": [],
   "author": "Safia Abdalla <safia@safia.rocks>",
   "license": "BSD-3-Clause",
@@ -17,5 +19,25 @@
     "immutable": "^4.0.0-rc.12",
     "reselect": "^4.0.0",
     "rx-jupyter": "^5.5.20"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
   }
 }

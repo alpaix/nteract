@@ -252,6 +252,16 @@ class CompletionItemProvider
       return text.substr(toRemove.length);
     }
 
+    // Handle taking only the suggestion content after the last dot. There are cases that a kernel when given 
+    // "suggestion1.itemA" text and typing "." that it will suggest the full path of "suggestion.itemA.itemB" instead of 
+    // just "itemB". The logic below handles these cases. This also handles the case where given "suggestion1.itemA.it" 
+    // text and typing "e" will suggest the full path of "suggestion.itemA.itemB" instead of "itemB". 
+    // This logic also covers that scenario.
+    const index = text.lastIndexOf(".");
+    if (index > -1 && index < text.length - 1) {
+      return text.substring(index + 1);
+    }
+
     return text;
   }
 

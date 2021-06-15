@@ -111,7 +111,7 @@ $ yarn build:desktop:watch
 $ yarn spawn
 ```
 
-You will need to reload the nteract page to fetch the latest changes from the build. You can do so by clicking `View > Reload` in the menu.
+You will need to reload the nteract page to fetch the latest changes from the build. You can do so by clicking `View > Reload` in the menu. (Note: reload is currently broken, [Issue #5168](https://github.com/nteract/nteract/issues/5168), so it's necessary to run `yarn spawn` to load the page again)
 
 **Helpful Tip:** You can enter the debugger in the Electron app by placing a `debugger;` statement in the desired location in your source code.
 

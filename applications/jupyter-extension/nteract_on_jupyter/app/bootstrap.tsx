@@ -59,9 +59,6 @@ export async function main(
       version: `nteract-on-jupyter@${config.appVersion}`,
       host: jupyterHostRecord,
     }),
-    // config: Immutable.Map({
-    //   theme: "light",
-    // }),
     core: makeStateRecord({
       currentKernelspecsRef: kernelspecsRef,
       entities: makeEntitiesRecord({

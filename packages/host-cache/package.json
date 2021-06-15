@@ -5,8 +5,10 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "nteractDesktop": "src/index.js",
-  "scripts": {},
-  "repository": "https://github.com/nteract/nteract/tree/master/packages/host-cache",
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='@mybinder/host-cache@${version}'"
+  },
+  
   "keywords": [
     "mybinder",
     "notebooks",
@@ -26,5 +28,25 @@
     "rx-binder": "^4.0.14",
     "rx-jupyter": "^5.5.20",
     "rxjs": "^6.3.3"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
   }
 }

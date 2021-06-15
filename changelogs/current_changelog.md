@@ -11,6 +11,7 @@
 Provide a bulleted list of breaking changes and a reference to the PR(s) containing those changes.
 
 - Now using "scrolled" metadata property instead of "collapsed" to denote whether a cell output is within a scrolled div or not, in order to align with standard [ipynb format](https://github.com/jupyter/nbformat/blob/master/nbformat/v4/nbformat.v4.schema.json). "collapsed" metadata property is no longer being set for new cells (used to be set to true). ([#5538](https://github.com/nteract/nteract/pull/5538))
+- Added support for `"scrolled": "auto"` for outputs (see "scrolled" property in [ipynb format schema](https://github.com/jupyter/nbformat/blob/master/nbformat/v4/nbformat.v4.schema.json)), replicating behavior in classic Jupyter Notebook. When "auto" scroll mode is set for a cell (or when "scrolled" is not defined, as "auto" is the default), then a cell's output will have scroll enabled if and only if its output's height exceeds a certain tall threshold (currently 1800px). The scrolling can still be set manually by setting `"scrolled": true` or `"scrolled": false`, or in the nteract UI by using the "Extended Output" toggle.
 
 #### New Features
 
@@ -56,6 +57,8 @@ Provide a bulleted list of breaking changes and a reference to the PR(s) contain
 Provide a bulleted list of new features or improvements and a reference to the PR(s) containing these changes.
 
 #### Bug Fixes
+
+- Monaco autocompletion should return suggestion content after the last dot - issue #5545 ([#5546](https://github.com/nteract/nteract/pull/5546))
 
 Provide a bulleted list of bug fixes and a reference to the PR(s) containing the changes.
 

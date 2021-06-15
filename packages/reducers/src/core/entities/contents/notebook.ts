@@ -863,7 +863,6 @@ function toggleOutputExpansion(
     ["notebook", "cellMap"],
     (cells: Map<CellId, ImmutableCell>) => {
       const scrolled = cells.getIn([id, "metadata", "scrolled"]);
-      // TODO: Revisit when implementing "auto" scrolled mode. We should update this to reflect whether the output is actually currently scrolled or not, which can depend on current output height.
       const isCurrentlyScrolled = scrolled !== false;
       return cells.setIn(
         [id, "metadata", "scrolled"],

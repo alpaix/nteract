@@ -5,8 +5,10 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "nteractDesktop": "src/index.ts",
-  "scripts": {},
-  "repository": "https://github.com/nteract/nteract/tree/master/packages/monaco-editor",
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='@nteract/monaco-editor@${version}'"
+  },
+  
   "keywords": [
     "nteract",
     "editor",
@@ -36,5 +38,25 @@
     "styled-components": ">= 4"
   },
   "author": "Kyle Kelley <rgbkrk@gmail.com>",
-  "license": "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
+  }
 }

@@ -5,7 +5,9 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "nteractDesktop": "src/index.ts",
-  "scripts": {},
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='@nteract/actions@${version}'"
+  },
   "keywords": [],
   "author": "Safia Abdalla <safia@safia.rocks>",
   "license": "BSD-3-Clause",
@@ -21,5 +23,25 @@
   },
   "devDependencies": {
     "utility-types": "^3.10.0"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
   }
 }

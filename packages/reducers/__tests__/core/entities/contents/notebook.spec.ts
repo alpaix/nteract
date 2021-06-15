@@ -792,27 +792,33 @@ describe("changeCellType", () => {
 });
 
 describe("toggleOutputExpansion", () => {
-  test("toggles value of scrolled property", () => {
+  test("toggles value of scrolled property when it starts as 'auto'", () => {
     const originalState = monocellDocument.updateIn(
       ["notebook", "cellMap"],
       (cells) =>
-        cells.map((value) => value.setIn(["metadata", "scrolled"], true))
+        cells.map((value) => value.setIn(["metadata", "scrolled"], "auto"))
     );
     const id = originalState.getIn(["notebook", "cellOrder"]).first();
-    const state2 = reducers(
-      originalState,
-      actions.toggleOutputExpansion({ id })
+    const state2 = reducers(originalState, actions.toggleOutputExpansion({ id }));
+    const state3 = reducers(state2, actions.toggleOutputExpansion({ id }));
+    const state4 = reducers(state3, actions.toggleOutputExpansion({ id }));
+    expect(state2.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])).toBe(false);
+    expect(state3.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])).toBe(true);
+    expect(state4.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])).toBe(false);
+  });
+  test("toggles value of scrolled property when it starts as undefined", () => {
+    const originalState = monocellDocument.updateIn(
+      ["notebook", "cellMap"],
+      (cells) =>
+        cells.map((value) => value.setIn(["metadata", "scrolled"], undefined))
     );
-    const state3 = reducers(
-      state2,
-      actions.toggleOutputExpansion({ id })
-    );
-    expect(
-      state2.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])
-    ).toBe(false);
-    expect(
-      state3.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])
-    ).toBe(true);
+    const id = originalState.getIn(["notebook", "cellOrder"]).first();
+    const state2 = reducers(originalState, actions.toggleOutputExpansion({ id }));
+    const state3 = reducers(state2, actions.toggleOutputExpansion({ id }));
+    const state4 = reducers(state3, actions.toggleOutputExpansion({ id }));
+    expect(state2.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])).toBe(false);
+    expect(state3.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])).toBe(true);
+    expect(state4.getIn(["notebook", "cellMap", id, "metadata", "scrolled"])).toBe(false);
   });
 });
 describe("appendOutput", () => {

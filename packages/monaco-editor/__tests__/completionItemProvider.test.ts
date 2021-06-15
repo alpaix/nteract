@@ -211,4 +211,34 @@ describe("Appropriate completions should be provided", () => {
     channels.next(mockCompleteReply);
     channels.complete();
   });
+
+  it("Should return suggestions with content after any last dots", (done) => {
+    const mockCompleteReply = createMessage("complete_reply", {
+      content: {
+        status: "some_status",
+        cursor_start: 3,
+        cursor_end: 5,
+        matches: ["completion1.itemA.itemB", "completion2.itemC"]
+      },
+      parent_header: mockCompletionRequest.header
+    });
+
+    const channels = new Subject<JupyterMessage>();
+    completionProvider.setChannels(channels);
+    completionProvider.provideCompletionItems(testModel, testPos).then((result) => {
+      expect(result).toHaveProperty("suggestions");
+      const returnedSuggestions = result.suggestions;
+      expect(returnedSuggestions.length).toEqual(2);
+      expect(returnedSuggestions[0].kind).toEqual(Monaco.languages.CompletionItemKind.Field);
+      expect(returnedSuggestions[0].label).toEqual("itemB");
+      expect(returnedSuggestions[0].insertText).toEqual("itemB");
+      expect(returnedSuggestions[1].kind).toEqual(Monaco.languages.CompletionItemKind.Field);
+      expect(returnedSuggestions[1].label).toEqual("itemC");
+      expect(returnedSuggestions[1].insertText).toEqual("itemC");
+      done();
+    });
+    // Set the reply message on channels and complete the stream
+    channels.next(mockCompleteReply);
+    channels.complete();
+  });
 });

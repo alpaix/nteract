@@ -1,12 +1,13 @@
 {
   "name": "@nteract/editor",
-  "version": "10.1.10",
+  "version": "10.1.11",
   "description": "The editor that lives inside cells in nteract",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "nteractDesktop": "src/index.tsx",
-  "scripts": {},
-  "repository": "https://github.com/nteract/nteract/tree/master/packages/editor",
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='@nteract/editor@${version}'"
+  },
   "keywords": [
     "nteract",
     "editor",
@@ -19,7 +20,7 @@
   "dependencies": {
     "@nteract/messaging": "^7.0.18",
     "@nteract/outputs": "^3.0.11",
-    "codemirror": "5.61.0",
+    "codemirror": "5.61.1",
     "rxjs": "^6.3.3"
   },
   "peerDependencies": {
@@ -34,5 +35,25 @@
     "@types/lodash.debounce": "^4.0.6",
     "@types/lodash.isequal": "^4.5.5",
     "styled-components": "^5.0.1"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
   }
 }

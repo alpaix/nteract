@@ -4,8 +4,10 @@
   "description": "RxJS 5 bindings for the Jupyter Notebook API",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "scripts": {},
-  "repository": "https://github.com/nteract/nteract/tree/master/packages/rx-jupyter",
+  "scripts": {
+    "release": "semantic-release -e semantic-release-monorepo --tag-format='rx-jupyter@${version}'"
+  },
+  
   "keywords": [
     "jupyter",
     "rxjs",
@@ -30,5 +32,25 @@
     "@nteract/types": "^7.1.8",
     "@types/js-cookie": "^2.2.0",
     "@types/url-join": "^4.0.0"
+  },
+  "release": {
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits"
+        }
+      ],
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version}"
+        }
+      ]
+    ]
   }
 }
