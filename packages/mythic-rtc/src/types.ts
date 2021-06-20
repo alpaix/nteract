@@ -1,13 +1,22 @@
 import * as Immutable from "immutable";
 import { Observable } from "rxjs";
-import { DocumentNode, ExecutionResult } from "graphql";
+import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
 import { Maybe } from "graphql/jsutils/Maybe";
-import { ImmutableCell } from "@nteract/commutable";
+import { ImmutableCell, ImmutableNotebook } from "@nteract/commutable";
 import { MythicAction } from "@nteract/myths";
+
+export type ExecuteResult = { [key: string]: any };
+
+export class ExecuteError extends Error {
+  constructor(readonly errors: ReadonlyArray<GraphQLError>) {
+    super();
+  }
+}
 
 export interface ICollaborationBackend {
   start(filePath: string): Promise<void>;
-  execute(document: DocumentNode, variableValues?: Maybe<{ [key: string]: unknown }>): Promise<ExecutionResult>;
+
+  execute(document: DocumentNode, variableValues?: Maybe<{ [key: string]: unknown }>): Promise<ExecuteResult>;
 
   subscribe(
     document: DocumentNode,
@@ -16,7 +25,7 @@ export interface ICollaborationBackend {
 }
 
 export interface ICollaborationDriver {
-  join(filePath: string): Observable<MythicAction>;
+  join(filePath: string, notebook: ImmutableNotebook): Observable<MythicAction>;
   leave(): Observable<MythicAction>;
 }
 

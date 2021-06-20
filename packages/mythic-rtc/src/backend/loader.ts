@@ -4,7 +4,7 @@ import { ContainerRuntimeFactoryWithDefaultDataStore } from "@fluidframework/aqu
 import { RouterliciousDocumentServiceFactory } from "@fluidframework/routerlicious-driver";
 import { Container, Loader } from "@fluidframework/container-loader";
 import { InsecureTokenProvider, InsecureUrlResolver } from "@fluidframework/test-runtime-utils";
-import { NotebookShell } from "./model/shell";
+import { ShellDDS } from "./model/shell";
 
 // Tinylicious service endpoints
 const hostUrl = "http://localhost:7070";
@@ -23,11 +23,11 @@ const user = {
 } as IUser;
 
 const fluidExport = new ContainerRuntimeFactoryWithDefaultDataStore(
-  NotebookShell.Factory,
-  new Map([NotebookShell.Factory.registryEntry])
+  ShellDDS.Factory,
+  new Map([ShellDDS.Factory.registryEntry])
 );
 
-export async function loadContainer(url: string): Promise<[Container, NotebookShell]> {
+export async function loadContainer(url: string): Promise<[Container, ShellDDS]> {
   const urlResolver = new InsecureUrlResolver(hostUrl, ordererUrl, storageUrl, tenantId, bearerSecret);
 
   const tokenProvider = new InsecureTokenProvider(tenantKey, user);
@@ -101,6 +101,6 @@ export async function loadContainer(url: string): Promise<[Container, NotebookSh
     throw new Error("Root object not found.");
   }
 
-  const fluidObject = response.value as NotebookShell;
+  const fluidObject = response.value as ShellDDS;
   return [container, fluidObject];
 }

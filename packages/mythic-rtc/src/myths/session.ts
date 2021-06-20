@@ -1,7 +1,13 @@
+import { ImmutableNotebook } from "@nteract/commutable";
 import { collaboration } from "../package";
 
-export const joinSession = collaboration.createMyth("join")<{ filePath: string }>({
-  thenDispatch: [(action, state) => state.driver.join(action.payload.filePath)]
+export const joinSession = collaboration.createMyth("join")<{ filePath: string; notebook: ImmutableNotebook }>({
+  thenDispatch: [
+    (action, state) => {
+      const { filePath, notebook } = action.payload;
+      return state.driver.join(filePath, notebook);
+    }
+  ]
 });
 
 export const leaveSession = collaboration.createMyth("leave")<void>({

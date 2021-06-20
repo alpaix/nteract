@@ -2,7 +2,7 @@ import { DocumentNode, execute, ExecutionResult, GraphQLSchema, subscribe } from
 import { Maybe } from "graphql/jsutils/Maybe";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { mergeTypeDefs } from "@graphql-tools/merge";
-import { ICollaborationBackend } from "../types";
+import { ExecuteError, ExecuteResult, ICollaborationBackend } from "../types";
 import { ResolverContext } from "./context";
 import { NotebookResolvers } from "./resolvers";
 
@@ -32,9 +32,13 @@ export class FluidBackend implements ICollaborationBackend {
     this.context = await ResolverContext.create(url);
   }
 
-  execute(document: DocumentNode, variableValues?: Maybe<{ [key: string]: unknown }>): Promise<ExecutionResult> {
-    const result = execute({ schema: this.schema, document, variableValues, contextValue: this.context });
-    return Promise.resolve(result);
+  async execute(document: DocumentNode, variableValues?: Maybe<{ [key: string]: unknown }>): Promise<ExecuteResult> {
+    const valueOrPromise = execute({ schema: this.schema, document, variableValues, contextValue: this.context });
+    const result = await Promise.resolve(valueOrPromise);
+    if (result.errors) {
+      throw new ExecuteError(result.errors);
+    }
+    return result.data ?? {};
   }
 
   subscribe(

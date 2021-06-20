@@ -7,6 +7,74 @@ type Mutation {
 
 input UpsertNotebookInput {
   filePath: String!
+  content: NotebookContentInput!
+}
+
+input NotebookContentInput {
+  cells: [CellInput!]
+  metadata: [MetadataInput!]
+}
+
+input CellInput {
+  code: CodeCellInput
+  markdown: TextCellInput
+  raw: TextCellInput
+}
+
+input CodeCellInput {
+  source: String!
+  metadata: [MetadataInput!]
+  executionCount: Int
+  outputs: [OutputInput!]
+}
+
+input TextCellInput {
+  source: String!
+  metadata: [MetadataInput!]
+}
+
+input MetadataInput {
+  name: String!
+  value: String!
+}
+
+input MediaBundleInput {
+  name: String!
+  value: String!
+}
+
+input OutputInput {
+  executeResult: ExecuteResultInput
+  displayData: DisplayDataInput
+  stream: StreamOutputInput
+  error: ErrorOutputInput
+}
+
+input ExecuteResultInput {
+  executionCount: Int
+  data: [MediaBundleInput!]
+  metadata: [MetadataInput!]
+}
+
+input DisplayDataInput {
+  data: [MediaBundleInput!]
+  metadata: [MetadataInput!]
+}
+
+input StreamOutputInput {
+  name: OutputStreamType
+  text: String
+}
+
+enum OutputStreamType {
+  stdout
+  stderr
+}
+
+input ErrorOutputInput {
+  ename: String
+  evalue: String
+  traceback: [String!]
 }
 
 type UpsertNotebookPayload {
@@ -22,12 +90,6 @@ enum CellType {
   code
   markdown
   raw
-}
-
-input CellInput {
-  id: ID!
-  cell_type: CellType!
-  source: String
 }
 
 enum DiffType {

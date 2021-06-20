@@ -5,7 +5,7 @@ type Query {
   """
   Lookup a given notebook by the file path.
   """
-  notebook(filePath: String!): Notebook
+  notebook(id: ID!): Notebook
 }
 
 type Notebook {

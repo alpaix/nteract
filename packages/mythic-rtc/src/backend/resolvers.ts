@@ -1,34 +1,41 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+import { Subject } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { ResolverContext } from "./context";
-import { CellOrderEvent, ISolidCell, ISolidModel } from "./model";
+import { CellModel, CellOrderEvent, ISolidModel } from "./model";
+import { NotebookDDS } from "./model/notebook";
 import { UpsertNotebookInput } from "./schema";
 
 const QueryResolver = {
   notebook: async (parent: any, args: { filePath: string }, context: ResolverContext /*, info: any*/) => {
-    return context.model;
+    const model = await context.shell.getModel();
+    return model;
   }
 };
 
 const MutationResolver = {
   upsertNotebook: async (parent: unknown, { input }: { input: UpsertNotebookInput }, context: ResolverContext) => {
     // const { filePath } = input;
-    await context.shell.upsertModel();
-    return { notebook: { id: "blah" } };
+    const model = await context.shell.upsertModel(input);
+    return { notebook: model };
   },
   insertCell: async (parent: any, { input }: any, context: ResolverContext) => {
     const { cell, insertAt } = input;
-    const newCell = await context.model?.insertCell(cell, insertAt);
+    const model = await context.shell.getModel();
+    const newCell = await model?.insertCell(cell, insertAt);
     return { id: newCell?.id };
   },
-  deleteCell: (parent: any, { id: cellId }: any, context: ResolverContext) => {
-    context.model?.deleteCell(cellId);
+  deleteCell: async (parent: any, { id: cellId }: any, context: ResolverContext) => {
+    const model = await context.shell.getModel();
+    model?.deleteCell(cellId);
     return true;
   },
   patchCellSource: async (parent: any, { input }: any, context: ResolverContext) => {
     const { id: cellId, diff } = input;
-    const cell = await context.model?.getCell(cellId);
+    const model = await context.shell.getModel();
+    const cell = await model?.getCell(cellId);
     if (cell) {
       const ss = cell.getSource();
       ss.replaceText(0, ss.getLength(), diff);
@@ -39,8 +46,9 @@ const MutationResolver = {
 
 const SubscriptionResolver = {
   cellOrder: {
-    subscribe: (parent: any, args: any, context: ResolverContext) => {
-      const order$ = context.model.cells$;
+    subscribe: async (parent: any, args: any, context: ResolverContext) => {
+      const model = await context.shell.getModel();
+      const order$ = model?.cells$ ?? new Subject();
       return eachValueFrom(order$);
     },
     resolve: (payload: any) => {
@@ -48,8 +56,9 @@ const SubscriptionResolver = {
     }
   },
   cellSource: {
-    subscribe: (parent: any, args: any, context: ResolverContext) => {
-      const source$ = context.model.source$;
+    subscribe: async (parent: any, args: any, context: ResolverContext) => {
+      const model = await context.shell.getModel();
+      const source$ = model?.source$ ?? new Subject();
       return eachValueFrom(source$);
     },
     resolve: (payload: any) => {
@@ -59,6 +68,9 @@ const SubscriptionResolver = {
 };
 
 const NotebookResolver = {
+  async id(model: NotebookDDS) {
+    return model.id;
+  },
   async cells(solidModel: ISolidModel, args: { first: number } /*, context: any, info: any*/) {
     const cells = await solidModel.getCells();
     return {
@@ -75,11 +87,11 @@ const NotebookResolver = {
 };
 
 const CellResolver = {
-  async id(solidCell: ISolidCell) {
-    return solidCell.id;
+  async id(cell: CellModel) {
+    return cell.id;
   },
-  async source(solidCell: ISolidCell) {
-    return solidCell.getSource().getText();
+  async source(cell: CellModel) {
+    return cell.getSource().getText();
   }
 };
 
@@ -89,9 +101,19 @@ export const NotebookResolvers = {
   Subscription: SubscriptionResolver,
   Notebook: NotebookResolver,
   CodeCell: CellResolver,
+  MarkdownCell: CellResolver,
+  RawCell: CellResolver,
   Cell: {
-    __resolveType(solidCell: ISolidCell) {
-      return "CodeCell"; // solidCell.type???
+    __resolveType(cell: CellModel) {
+      switch (cell.cellType) {
+        case "code":
+          return "CodeCell";
+        case "markdown":
+          return "MarkdownCell";
+        case "raw":
+        default:
+          return "RawCell";
+      }
     }
   },
   CellOrderEvent: {

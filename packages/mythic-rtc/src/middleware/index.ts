@@ -1,31 +1,37 @@
 import Immutable from "immutable";
-import { CellId } from "@nteract/commutable";
-import { actions as coreActions, selectors as coreSelectors, AppState } from "@nteract/core";
+import { CellId, fromJS } from "@nteract/commutable";
+import { actions as coreActions, selectors as coreSelectors, AppState, ContentRef, NotebookModel } from "@nteract/core";
 import { AnyAction, Dispatch, Store } from "redux";
 // import debug from "../common/debug";
 import {
   deleteCellFromMap,
-  recordDeleteCell,
+  joinSession,
   recordCellContent,
+  recordDeleteCell,
   recordInsertCell,
-  updateCellMap,
-  joinSession
+  updateCellMap
 } from "../myths";
+
+const handleFetchContent = (action: coreActions.FetchContentFulfilled, state: AppState) => {
+  const { filepath: filePath, model, contentRef, origin } = action.payload as any;
+  if (origin !== "remote" && model.type === "notebook") {
+    const model = coreSelectors.notebookModel(state, { contentRef });
+    return joinSession.create({ filePath, notebook: model.notebook });
+  }
+  return null;
+};
 
 const handleInsertCell = (action: coreActions.CreateCellAbove | coreActions.CreateCellBelow, state: AppState) => {
   // This seems to return the current focused cell, may be because the new cell
   const { contentRef, origin, remoteCellId } = action.payload as any;
-  const model = coreSelectors.model(state, { contentRef });
-  if (!model || model.type !== "notebook") {
-    return null;
-  }
-  const insertId = action.payload.id ?? model.cellFocused;
+  const model = coreSelectors.notebookModel(state, { contentRef });
+  const insertId = action.payload.id ?? coreSelectors.notebook.cellFocused(model);
   if (!insertId) {
     return null;
   }
 
   const cellOrder = model.notebook.get<Immutable.List<CellId> | null>("cellOrder", null);
-  const relativeIndex = cellOrder!.indexOf(insertId);
+  const relativeIndex = cellOrder?.indexOf(insertId) ?? -1;
   let insertAt = 0;
 
   switch (action.type) {
@@ -88,9 +94,9 @@ export const recordingMiddleware = (store: Store<AppState>) => (next: Dispatch<A
   switch (action.type) {
     case coreActions.FETCH_CONTENT_FULFILLED:
       {
-        const { filepath: filePath, origin } = action.payload;
-        if (origin !== "remote") {
-          store.dispatch(joinSession.create({ filePath }));
+        const contentAction = handleFetchContent(action as any, store.getState());
+        if (contentAction) {
+          store.dispatch(contentAction);
         }
       }
       break;

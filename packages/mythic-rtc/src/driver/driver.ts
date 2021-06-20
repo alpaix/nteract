@@ -6,6 +6,9 @@ import namespaceDebug from "../common/debug";
 import { ICollaborationBackend, ICollaborationDriver } from "../types";
 import { joinSessionSucceeded } from "../myths";
 import { ActionReplicator } from "./replicator";
+import { ImmutableNotebook } from "@nteract/commutable";
+import { CellInput, NotebookContentInput, UpsertNotebookInput } from "../backend/schema";
+import { makeContentInput } from "./conversions";
 
 export class CollaborationDriver implements ICollaborationDriver {
   private readonly debug: debug.Debugger = namespaceDebug.extend("rtc", "|");
@@ -15,10 +18,10 @@ export class CollaborationDriver implements ICollaborationDriver {
     private readonly contentRef: ContentRef
   ) {}
 
-  join(filePath: string): Observable<MythicAction<string, string, {}>> {
+  join(filePath: string, notebook: ImmutableNotebook): Observable<MythicAction<string, string, {}>> {
     const actionStream = async (actions$: Subject<MythicAction>) => {
       await this.backend.start(filePath);
-      await this.loadModel(filePath, actions$);
+      await this.loadModel(filePath, notebook, actions$);
       const replicator = new ActionReplicator(actions$, this.backend, this.store, this.contentRef);
       replicator.subscribe();
       actions$.next(joinSessionSucceeded.create());
@@ -36,7 +39,7 @@ export class CollaborationDriver implements ICollaborationDriver {
   }
 
   //#region private
-  private async loadModel(filePath: string, actions$: Subject<MythicAction>) {
+  private async loadModel(filePath: string, notebook: ImmutableNotebook, actions$: Subject<MythicAction>) {
     try {
       const mutation = gql`
         mutation UpsertNotebook($input: UpsertNotebookInput!) {
@@ -47,16 +50,18 @@ export class CollaborationDriver implements ICollaborationDriver {
           }
         }
       `;
+      const contentInput = makeContentInput(notebook);
       const upsert = await this.backend.execute(mutation, {
         input: {
-          filePath
-        }
+          filePath,
+          content: contentInput
+        } as UpsertNotebookInput
       });
       this.debug("Upserted notebook", upsert);
 
       const query = gql`
-        query {
-          notebook(filePath: "./Default.ipynb") {
+        query FetchNotebook($id: ID!) {
+          notebook(id: $id) {
             cells {
               nodes {
                 __typename
@@ -67,9 +72,9 @@ export class CollaborationDriver implements ICollaborationDriver {
           }
         }
       `;
-      const result = await this.backend.execute(query);
+      const result = await this.backend.execute(query, { id: upsert.upsertNotebook.notebook.id });
       // result.errors[message]
-      const notebookData = result!.data!.notebook;
+      const notebookData = result.notebook;
       this.createNotebook(actions$, notebookData);
     } catch (error) {
       this.debug(error);

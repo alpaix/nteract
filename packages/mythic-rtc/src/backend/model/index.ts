@@ -1,2 +1,2 @@
 export * from "./types";
-export { NotebookShell } from "./shell";
+export { ShellDDS } from "./shell";

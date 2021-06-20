@@ -9,19 +9,34 @@ export interface ISolidModel {
   readonly cells$: Observable<CellOrderEvent>;
   readonly source$: Observable<ICellSourceEvent>;
 
-  getCells(): Promise<ISolidCell[]>;
-  getCell(id: string): Promise<ISolidCell | undefined>;
-  insertCell(cell: CellDef, insertAt: number): Promise<ISolidCell>;
+  getCells(): Promise<CellModel[]>;
+  getCell(id: string): Promise<CellModel | undefined>;
+  insertCell(cell: CellDef, insertAt: number): Promise<CellModel>;
   deleteCell(id: string): void;
   replaceCell(id: string, cell: CellDef): Promise<void>;
   moveCell(id: string, destId: string, above: boolean): void;
   updateMetadata(parent: string, payload: any): void;
 }
 
-export interface ISolidCell {
+export interface ICell {
+  cellType: "code" | "markdown" | "raw";
   readonly id: string;
   getSource(): SharedString;
 }
+
+export interface ICodeCell extends ICell {
+  cellType: "code";
+}
+
+export interface IMarkdownCell extends ICell {
+  cellType: "markdown";
+}
+
+export interface IRawCell extends ICell {
+  cellType: "raw";
+}
+
+export type CellModel = ICodeCell | IMarkdownCell | IRawCell;
 
 export interface ICellSourceEvent {
   id: string;
