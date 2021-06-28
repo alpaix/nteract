@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { SharedString } from "@fluidframework/sequence";
-import { CellDef } from "../schema";
+import { CellDef, MetadataEntryDef } from "../schema";
 
 /**
  * Describes the public API surface for our Fluid DataObject.
@@ -15,6 +15,7 @@ export interface ISolidModel {
   deleteCell(id: string): void;
   replaceCell(id: string, cell: CellDef): Promise<void>;
   moveCell(id: string, destId: string, above: boolean): void;
+  getMetadata(): Promise<MetadataEntryDef[]>;
   updateMetadata(parent: string, payload: any): void;
 }
 
@@ -22,6 +23,7 @@ export interface ICell {
   cellType: "code" | "markdown" | "raw";
   readonly id: string;
   getSource(): SharedString;
+  getMetadata(): Promise<MetadataEntryDef[]>;
 }
 
 export interface ICodeCell extends ICell {

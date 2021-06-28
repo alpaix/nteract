@@ -29,7 +29,7 @@ export interface TextCellInput {
 }
 
 export interface MetadataInput {
-  name: string;
+  key: string;
   value: string;
 }
 

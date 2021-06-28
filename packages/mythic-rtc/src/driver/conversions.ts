@@ -1,11 +1,11 @@
 import { ImmutableCodeCell, ImmutableMarkdownCell, ImmutableNotebook, ImmutableRawCell } from "@nteract/commutable";
-import { CellInput, NotebookContentInput } from "../backend/schema";
+import { CellInput, MetadataInput, NotebookContentInput } from "../backend/schema";
 
 function makeCodeCellInput(cell: ImmutableCodeCell): CellInput {
-  // cell.metadata.forEach((value, key) => {
-  //   metadata.set(key, value);
-  // });
-  // executionCount.set(cell.execution_count);
+  const metadata = [] as MetadataInput[];
+  for (const [key, value] of cell.metadata) {
+    metadata.push({ key, value: JSON.stringify(value) });
+  }
   // const mappedOutputs = cell.outputs
   //   .map((value: ImmutableOutput) => {
   //     return {
@@ -17,23 +17,34 @@ function makeCodeCellInput(cell: ImmutableCodeCell): CellInput {
   return {
     code: {
       source: cell.source,
-      executionCount: cell.execution_count
+      executionCount: cell.execution_count,
+      metadata
     }
   };
 }
 
 function makeMarkdownCellInput(cell: ImmutableMarkdownCell): CellInput {
+  const metadata = [] as MetadataInput[];
+  for (const [key, value] of cell.metadata) {
+    metadata.push({ key, value: JSON.stringify(value) });
+  }
   return {
     markdown: {
-      source: cell.source
+      source: cell.source,
+      metadata
     }
   };
 }
 
 function makeRawCellInput(cell: ImmutableRawCell): CellInput {
+  const metadata = [] as MetadataInput[];
+  for (const [key, value] of cell.metadata) {
+    metadata.push({ key, value: JSON.stringify(value) });
+  }
   return {
     raw: {
-      source: cell.source
+      source: cell.source,
+      metadata
     }
   };
 }
@@ -55,9 +66,10 @@ export function makeContentInput(notebook: ImmutableNotebook): NotebookContentIn
     }
   }
 
-  // cell.metadata.forEach((value, key) => {
-  //   metadata.set(key, value);
-  // });
+  const metadata = [] as MetadataInput[];
+  for (const [key, value] of notebook.metadata) {
+    metadata.push({ key, value: JSON.stringify(value) });
+  }
 
-  return { cells };
+  return { cells, metadata };
 }

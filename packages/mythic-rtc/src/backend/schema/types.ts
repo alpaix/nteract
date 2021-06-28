@@ -4,6 +4,11 @@ export interface NotebookDef {
   id: string;
 }
 
+export interface MetadataEntryDef {
+  key: string;
+  value: string;
+}
+
 interface BaseCellDef {
   id: string;
 }

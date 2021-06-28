@@ -39,27 +39,38 @@ type Notebook {
   Retrieve an individual cell given its unique ID
   """
   cell(id: ID!): Cell
+
+  metadata: [MetadataEntry!]
+}
+
+type MetadataEntry {
+  key: String!
+  value: String
 }
 
 interface ICell {
   id: ID!
   source: String
+  metadata: [MetadataEntry!]
 }
 
 type CodeCell implements ICell {
   id: ID!
   source: String
+  metadata: [MetadataEntry!]
   output: Output
 }
 
 type MarkdownCell implements ICell {
   id: ID!
   source: String
+  metadata: [MetadataEntry!]
 }
 
 type RawCell implements ICell {
   id: ID!
   source: String
+  metadata: [MetadataEntry!]
 }
 
 union Cell = CodeCell | MarkdownCell | RawCell

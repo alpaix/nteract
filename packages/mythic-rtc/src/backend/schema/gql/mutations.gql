@@ -34,7 +34,7 @@ input TextCellInput {
 }
 
 input MetadataInput {
-  name: String!
+  key: String!
   value: String!
 }
 

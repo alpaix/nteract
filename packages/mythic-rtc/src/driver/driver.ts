@@ -46,6 +46,21 @@ export class CollaborationDriver implements ICollaborationDriver {
           upsertNotebook(input: $input) {
             notebook {
               id
+              cells {
+                nodes {
+                  __typename
+                  id
+                  source
+                  metadata {
+                    key
+                    value
+                  }
+                }
+              }
+              metadata {
+                key
+                value
+              }
             }
           }
         }
@@ -59,23 +74,27 @@ export class CollaborationDriver implements ICollaborationDriver {
       });
       this.debug("Upserted notebook", upsert);
 
-      const query = gql`
-        query FetchNotebook($id: ID!) {
-          notebook(id: $id) {
-            cells {
-              nodes {
-                __typename
-                id
-                source
-              }
-            }
-          }
-        }
-      `;
-      const result = await this.backend.execute(query, { id: upsert.upsertNotebook.notebook.id });
-      // result.errors[message]
-      const notebookData = result.notebook;
-      this.createNotebook(actions$, notebookData);
+      // const query = gql`
+      //   query FetchNotebook($id: ID!) {
+      //     notebook(id: $id) {
+      //       cells {
+      //         nodes {
+      //           __typename
+      //           id
+      //           source
+      //         }
+      //       }
+      //       metadata {
+      //         key
+      //         value
+      //       }
+      //     }
+      //   }
+      // `;
+      // const result = await this.backend.execute(query, { id: upsert.upsertNotebook.notebook.id });
+      // // result.errors[message]
+      // const notebookData = result.notebook;
+      this.createNotebook(actions$, upsert.upsertNotebook.notebook);
     } catch (error) {
       this.debug(error);
     }

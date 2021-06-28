@@ -4,8 +4,8 @@ import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
 import { SharedObjectSequence } from "@fluidframework/sequence";
 import { ISharedMap, SharedMap, IValueChanged } from "@fluidframework/map";
-import { CellDef, CellInput, NotebookContentInput } from "../schema";
-import { CellOrderEvent, ICellSourceEvent, ISolidCell, ISolidModel } from "./types";
+import { CellDef, CellInput, MetadataEntryDef, NotebookContentInput } from "../schema";
+import { CellOrderEvent, ICellSourceEvent, ICell, ISolidModel } from "./types";
 import { CodeCellDDS } from "./codeCell";
 import { TextCellDDS } from "./textCell";
 
@@ -31,7 +31,7 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
 
   source$: Observable<ICellSourceEvent> = new Subject();
 
-  async getCells(): Promise<ISolidCell[]> {
+  async getCells(): Promise<ICell[]> {
     const componentPromises: Promise<any>[] = [];
     for (const handle of this.cells.getItems(0)) {
       componentPromises.push(handle.get());
@@ -39,14 +39,14 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
     return Promise.all(componentPromises);
   }
 
-  async getCell(id: string): Promise<ISolidCell | undefined> {
+  async getCell(id: string): Promise<ICell | undefined> {
     throw new Error("Method not implemented.");
     // const cellHandle = await this.cellMap.get(id);
     // const cellComponent: ISolidCell = await cellHandle.get();
     // return cellComponent;
   }
 
-  async insertCell(cell: CellDef, insertAt: number): Promise<ISolidCell> {
+  async insertCell(cell: CellDef, insertAt: number): Promise<ICell> {
     throw new Error("Method not implemented.");
     // const cellHandle = await this.createCellComponent(cell);
     // this.cellMap.set(cell.id, cellHandle);
@@ -72,6 +72,13 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
   moveCell(id: string, destId: string, above: boolean): void {
     throw new Error("Method not implemented.");
   }
+
+  async getMetadata(): Promise<MetadataEntryDef[]> {
+    const result: MetadataEntryDef[] = [];
+    this.metadata?.forEach((value, key) => result.push({ key, value }));
+    return result;
+  }
+
   updateMetadata(parent: string, payload: any): void {
     throw new Error("Method not implemented.");
   }
@@ -92,9 +99,10 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
         }
       }
       cells.insert(0, handles);
-      // notebook.metadata.forEach((value, key) => {
-      //   metadata.set(key, value);
-      // });
+
+      input.metadata?.forEach(({ key, value }) => {
+        metadata.set(key, value);
+      });
     }
 
     this.root.set(CellsKey, cells.handle).set(MetadataKey, metadata.handle);

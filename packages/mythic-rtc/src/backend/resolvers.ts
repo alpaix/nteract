@@ -83,6 +83,9 @@ const NotebookResolver = {
   async cell(solidModel: ISolidModel, args: { id: string }) {
     const cell = await solidModel.getCell(args.id);
     return cell;
+  },
+  metadata(solidModel: ISolidModel) {
+    return solidModel.getMetadata();
   }
 };
 
@@ -92,6 +95,9 @@ const CellResolver = {
   },
   async source(cell: CellModel) {
     return cell.getSource().getText();
+  },
+  metadata(cell: CellModel) {
+    return cell.getMetadata();
   }
 };
 
