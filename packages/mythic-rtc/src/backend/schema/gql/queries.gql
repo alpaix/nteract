@@ -58,7 +58,8 @@ type CodeCell implements ICell {
   id: ID!
   source: String
   metadata: [MetadataEntry!]
-  output: Output
+  executionCount: Int
+  outputs: [CellOutput!]
 }
 
 type MarkdownCell implements ICell {
@@ -75,9 +76,38 @@ type RawCell implements ICell {
 
 union Cell = CodeCell | MarkdownCell | RawCell
 
-type Output {
-  media: String
+union CellOutput = DisplayData | ErrorOutput | ExecuteResult | StreamOutput
+
+type ExecuteResult {
+  executionCount: Int
+  data: [MediaBundleEntry!]
+  metadata: [MetadataEntry!]
+}
+
+type DisplayData {
+  data: [MediaBundleEntry!]
+  metadata: [MetadataEntry!]
+}
+
+type StreamOutput {
+  name: OutputStreamType
   text: String
+}
+
+enum OutputStreamType {
+  stdout
+  stderr
+}
+
+type ErrorOutput {
+  ename: String
+  evalue: String
+  traceback: [String!]
+}
+
+type MediaBundleEntry {
+  key: String!
+  value: String
 }
 
 """

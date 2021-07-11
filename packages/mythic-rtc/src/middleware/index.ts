@@ -1,6 +1,6 @@
 import Immutable from "immutable";
-import { CellId, fromJS } from "@nteract/commutable";
-import { actions as coreActions, selectors as coreSelectors, AppState, ContentRef, NotebookModel } from "@nteract/core";
+import { CellId } from "@nteract/commutable";
+import { actions as coreActions, selectors as coreSelectors, AppState } from "@nteract/core";
 import { AnyAction, Dispatch, Store } from "redux";
 // import debug from "../common/debug";
 import {
@@ -13,10 +13,10 @@ import {
 } from "../myths";
 
 const handleFetchContent = (action: coreActions.FetchContentFulfilled, state: AppState) => {
-  const { filepath: filePath, model, contentRef, origin } = action.payload as any;
+  const { filepath: filePath, model, contentRef, kernelRef, origin } = action.payload as any;
   if (origin !== "remote" && model.type === "notebook") {
     const model = coreSelectors.notebookModel(state, { contentRef });
-    return joinSession.create({ filePath, notebook: model.notebook });
+    return joinSession.create({ filePath, notebook: model.notebook, kernelRef });
   }
   return null;
 };

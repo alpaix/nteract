@@ -2,6 +2,12 @@ import { Maybe } from "graphql/jsutils/Maybe";
 
 export interface NotebookDef {
   id: string;
+  cells: CellConnectionDef;
+  metadata: MetadataEntryDef[];
+}
+
+export interface CellConnectionDef {
+  nodes: CellDef[];
 }
 
 export interface MetadataEntryDef {
@@ -11,28 +17,57 @@ export interface MetadataEntryDef {
 
 interface BaseCellDef {
   id: string;
+  source: string;
+  metadata: MetadataEntryDef[];
 }
 
 export interface CodeCellDef extends BaseCellDef {
-  cell_type: "code";
-  metadata: Map<string, any>;
-  execution_count: Maybe<number>;
-  source: string;
-  // outputs: ImmutableOutput[];
+  __typename: "CodeCell";
+  executionCount: Maybe<number>;
+  outputs: CellOutputDef[];
 }
 
 export interface MarkdownCellDef extends BaseCellDef {
-  cell_type: "markdown";
-  source: string;
-  metadata: Map<string, any>;
+  __typename: "MarkdownCell";
 }
 
 export interface RawCellDef extends BaseCellDef {
-  cell_type: "raw";
-  source: string;
-  metadata: Map<string, any>;
+  __typename: "RawCell";
 }
 
 export type CellDef = MarkdownCellDef | CodeCellDef | RawCellDef;
 
-export type CellType = "raw" | "markdown" | "code";
+export interface DisplayDataDef {
+  __typename: "DisplayData";
+  data: MediaBundleEntryDef[];
+  metadata: MetadataEntryDef[];
+}
+
+export interface ErrorOutputDef {
+  __typename: "ErrorOutput";
+  ename: string;
+  evalue: string;
+  traceback: string[];
+}
+
+export interface ExecuteResultDef {
+  __typename: "ExecuteResult";
+  executionCount: number;
+  data: MediaBundleEntryDef[];
+  metadata: MetadataEntryDef[];
+}
+
+export interface StreamOutputDef {
+  __typename: "StreamOutput";
+  name: OutputStreamType;
+  text: string;
+}
+
+export type OutputStreamType = "stdout" | "stderr";
+
+export interface MediaBundleEntryDef {
+  key: string;
+  value: string;
+}
+
+export type CellOutputDef = DisplayDataDef | ErrorOutputDef | ExecuteResultDef | StreamOutputDef;

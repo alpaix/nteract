@@ -33,22 +33,29 @@ export interface MetadataInput {
   value: string;
 }
 
-export interface OutputInput {
-  executeResult: ExecuteResultInput;
-  displayData: DisplayDataInput;
-  stream: StreamOutputInput;
-  error: ErrorOutputInput;
-}
+export type OutputInput =
+  | {
+      executeResult: ExecuteResultInput;
+    }
+  | {
+      displayData: DisplayDataInput;
+    }
+  | {
+      stream: StreamOutputInput;
+    }
+  | {
+      error: ErrorOutputInput;
+    };
 
 export interface ExecuteResultInput {
-  executionCount: number;
+  executionCount: number | null;
   data: MediaBundleInput[];
-  metadata: MetadataInput[];
+  metadata?: MetadataInput[];
 }
 
 export interface DisplayDataInput {
   data: MediaBundleInput[];
-  metadata: MetadataInput[];
+  metadata?: MetadataInput[];
 }
 
 export interface StreamOutputInput {
@@ -65,7 +72,7 @@ export interface ErrorOutputInput {
 }
 
 export interface MediaBundleInput {
-  name: string;
+  key: string;
   value: string;
 }
 

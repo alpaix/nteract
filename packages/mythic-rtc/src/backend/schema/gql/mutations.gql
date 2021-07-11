@@ -39,15 +39,15 @@ input MetadataInput {
 }
 
 input MediaBundleInput {
-  name: String!
+  key: String!
   value: String!
 }
 
 input OutputInput {
-  executeResult: ExecuteResultInput
   displayData: DisplayDataInput
-  stream: StreamOutputInput
   error: ErrorOutputInput
+  executeResult: ExecuteResultInput
+  stream: StreamOutputInput
 }
 
 input ExecuteResultInput {
@@ -64,11 +64,6 @@ input DisplayDataInput {
 input StreamOutputInput {
   name: OutputStreamType
   text: String
-}
-
-enum OutputStreamType {
-  stdout
-  stderr
 }
 
 input ErrorOutputInput {

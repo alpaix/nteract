@@ -3,6 +3,7 @@ import { Observable } from "rxjs";
 import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
 import { Maybe } from "graphql/jsutils/Maybe";
 import { ImmutableCell, ImmutableNotebook } from "@nteract/commutable";
+import { KernelRef } from "@nteract/types";
 import { MythicAction } from "@nteract/myths";
 
 export type ExecuteResult = { [key: string]: any };
@@ -25,7 +26,7 @@ export interface ICollaborationBackend {
 }
 
 export interface ICollaborationDriver {
-  join(filePath: string, notebook: ImmutableNotebook): Observable<MythicAction>;
+  join(filePath: string, notebook: ImmutableNotebook, kernelRef: KernelRef): Observable<MythicAction>;
   leave(): Observable<MythicAction>;
 }
 

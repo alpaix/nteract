@@ -4,9 +4,9 @@
 import { Subject } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { ResolverContext } from "./context";
-import { CellModel, CellOrderEvent, ISolidModel } from "./model";
+import { CellModel, CellOrderEvent, ICellOutput, ICodeCell, ISolidModel } from "./model";
 import { NotebookDDS } from "./model/notebook";
-import { UpsertNotebookInput } from "./schema";
+import { CellOutputDef, UpsertNotebookInput } from "./schema";
 
 const QueryResolver = {
   notebook: async (parent: any, args: { filePath: string }, context: ResolverContext /*, info: any*/) => {
@@ -101,26 +101,29 @@ const CellResolver = {
   }
 };
 
+const CodeCellResolver = {
+  ...CellResolver,
+  executionCount(cell: ICodeCell) {
+    return cell.getExecutionCount();
+  },
+  outputs(cell: ICodeCell) {
+    return cell.getOutputs();
+  }
+};
+
 export const NotebookResolvers = {
   Query: QueryResolver,
   Mutation: MutationResolver,
   Subscription: SubscriptionResolver,
   Notebook: NotebookResolver,
-  CodeCell: CellResolver,
+  CodeCell: CodeCellResolver,
   MarkdownCell: CellResolver,
   RawCell: CellResolver,
   Cell: {
-    __resolveType(cell: CellModel) {
-      switch (cell.cellType) {
-        case "code":
-          return "CodeCell";
-        case "markdown":
-          return "MarkdownCell";
-        case "raw":
-        default:
-          return "RawCell";
-      }
-    }
+    __resolveType: ({ cellType }: CellModel) => cellType
+  },
+  CellOutput: {
+    __resolveType: ({ type }: ICellOutput) => type
   },
   CellOrderEvent: {
     __resolveType: ({ event }: CellOrderEvent) => event

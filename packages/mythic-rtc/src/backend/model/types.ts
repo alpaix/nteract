@@ -20,25 +20,32 @@ export interface ISolidModel {
 }
 
 export interface ICell {
-  cellType: "code" | "markdown" | "raw";
+  cellType: "CodeCell" | "MarkdownCell" | "RawCell";
   readonly id: string;
   getSource(): SharedString;
-  getMetadata(): Promise<MetadataEntryDef[]>;
+  getMetadata(): MetadataEntryDef[];
 }
 
 export interface ICodeCell extends ICell {
-  cellType: "code";
+  cellType: "CodeCell";
+  getExecutionCount(): number | undefined;
+  getOutputs(): ICellOutput[];
 }
 
 export interface IMarkdownCell extends ICell {
-  cellType: "markdown";
+  cellType: "MarkdownCell";
 }
 
 export interface IRawCell extends ICell {
-  cellType: "raw";
+  cellType: "RawCell";
 }
 
 export type CellModel = ICodeCell | IMarkdownCell | IRawCell;
+
+export interface ICellOutput {
+  type: "DisplayData" | "ErrorOutput" | "ExecuteResult" | "StreamOutput";
+  [key: string]: unknown;
+}
 
 export interface ICellSourceEvent {
   id: string;

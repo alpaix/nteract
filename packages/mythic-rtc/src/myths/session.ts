@@ -1,11 +1,16 @@
 import { ImmutableNotebook } from "@nteract/commutable";
+import { KernelRef } from "@nteract/types";
 import { collaboration } from "../package";
 
-export const joinSession = collaboration.createMyth("join")<{ filePath: string; notebook: ImmutableNotebook }>({
+export const joinSession = collaboration.createMyth("join")<{
+  filePath: string,
+  notebook: ImmutableNotebook,
+  kernelRef: KernelRef
+}>({
   thenDispatch: [
     (action, state) => {
-      const { filePath, notebook } = action.payload;
-      return state.driver.join(filePath, notebook);
+      const { filePath, notebook, kernelRef } = action.payload;
+      return state.driver.join(filePath, notebook, kernelRef);
     }
   ]
 });

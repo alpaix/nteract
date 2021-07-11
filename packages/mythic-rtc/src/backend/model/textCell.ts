@@ -24,8 +24,8 @@ export class TextCellDDS extends DataObject<{}, TextCellInput> implements IMarkd
   );
 
   //#region ISolidCell
-  get cellType(): "markdown" {
-    return "markdown";
+  get cellType(): "MarkdownCell" {
+    return "MarkdownCell";
   }
 
   getSource(): SharedString {
@@ -33,7 +33,7 @@ export class TextCellDDS extends DataObject<{}, TextCellInput> implements IMarkd
     return this.source!;
   }
 
-  async getMetadata(): Promise<MetadataEntryDef[]> {
+  getMetadata(): MetadataEntryDef[] {
     const result: MetadataEntryDef[] = [];
     this.metadata?.forEach((value, key) => result.push({ key, value }));
     return result;

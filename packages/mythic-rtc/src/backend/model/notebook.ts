@@ -5,7 +5,7 @@ import { IFluidHandle } from "@fluidframework/core-interfaces";
 import { SharedObjectSequence } from "@fluidframework/sequence";
 import { ISharedMap, SharedMap, IValueChanged } from "@fluidframework/map";
 import { CellDef, CellInput, MetadataEntryDef, NotebookContentInput } from "../schema";
-import { CellOrderEvent, ICellSourceEvent, ICell, ISolidModel } from "./types";
+import { CellOrderEvent, ICellSourceEvent, ICell, ISolidModel, CellModel } from "./types";
 import { CodeCellDDS } from "./codeCell";
 import { TextCellDDS } from "./textCell";
 
@@ -31,7 +31,7 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
 
   source$: Observable<ICellSourceEvent> = new Subject();
 
-  async getCells(): Promise<ICell[]> {
+  async getCells(): Promise<CellModel[]> {
     const componentPromises: Promise<any>[] = [];
     for (const handle of this.cells.getItems(0)) {
       componentPromises.push(handle.get());
@@ -39,14 +39,14 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
     return Promise.all(componentPromises);
   }
 
-  async getCell(id: string): Promise<ICell | undefined> {
+  async getCell(id: string): Promise<CellModel | undefined> {
     throw new Error("Method not implemented.");
     // const cellHandle = await this.cellMap.get(id);
     // const cellComponent: ISolidCell = await cellHandle.get();
     // return cellComponent;
   }
 
-  async insertCell(cell: CellDef, insertAt: number): Promise<ICell> {
+  async insertCell(cell: CellDef, insertAt: number): Promise<CellModel> {
     throw new Error("Method not implemented.");
     // const cellHandle = await this.createCellComponent(cell);
     // this.cellMap.set(cell.id, cellHandle);
