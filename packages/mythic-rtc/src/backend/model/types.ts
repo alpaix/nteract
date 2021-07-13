@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { SharedString } from "@fluidframework/sequence";
-import { CellDef, MetadataEntryDef } from "../schema";
+import { CellDef, CellInput, MetadataEntryDef } from "../schema";
 
 /**
  * Describes the public API surface for our Fluid DataObject.
@@ -8,27 +8,26 @@ import { CellDef, MetadataEntryDef } from "../schema";
 export interface ISolidModel {
   readonly cells$: Observable<CellOrderEvent>;
   readonly source$: Observable<ICellSourceEvent>;
-
+  readonly metadata: MetadataEntryDef[];
   getCells(): Promise<CellModel[]>;
   getCell(id: string): Promise<CellModel | undefined>;
-  insertCell(cell: CellDef, insertAt: number): Promise<CellModel>;
+  insertCell(cell: CellInput, insertAt: number): Promise<CellModel>;
   deleteCell(id: string): void;
-  replaceCell(id: string, cell: CellDef): Promise<void>;
+  replaceCell(id: string, cell: CellInput): Promise<void>;
   moveCell(id: string, destId: string, above: boolean): void;
-  getMetadata(): Promise<MetadataEntryDef[]>;
-  updateMetadata(parent: string, payload: any): void;
+  updateMetadata(parent: string, payload: unknown): void;
 }
 
 export interface ICell {
   cellType: "CodeCell" | "MarkdownCell" | "RawCell";
   readonly id: string;
   getSource(): SharedString;
-  getMetadata(): MetadataEntryDef[];
+  readonly metadata: MetadataEntryDef[];
 }
 
 export interface ICodeCell extends ICell {
   cellType: "CodeCell";
-  getExecutionCount(): number | undefined;
+  readonly executionCount: number | undefined;
   getOutputs(): ICellOutput[];
 }
 

@@ -17,8 +17,8 @@ export class ActionReplicator {
     private readonly contentRef: ContentRef
   ) {}
 
-  async subscribe() {
-    await Promise.all([this.cellOrderSub(), this.cellSourceSub()]);
+  subscribe(): Promise<unknown> {
+    return Promise.all([this.cellOrderSub(), this.cellSourceSub()]);
   }
 
   //#region private

@@ -10,13 +10,14 @@ import { CodeCellDDS } from "./codeCell";
 import { TextCellDDS } from "./textCell";
 
 const CellsKey = "cells";
+const CellOrderKey = "cellOrder";
 const MetadataKey = "metadata";
 
 export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements ISolidModel {
   public static DataObjectName = "notebook-model";
-
-  private cells!: SharedObjectSequence<IFluidHandle>;
-  private metadata: ISharedMap | undefined;
+  private cellMap!: ISharedMap;
+  private cellOrder!: SharedObjectSequence<string>;
+  private metadataMap!: ISharedMap;
 
   public static readonly Factory = new DataObjectFactory(
     NotebookDDS.DataObjectName,
@@ -31,55 +32,50 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
 
   source$: Observable<ICellSourceEvent> = new Subject();
 
+  get metadata(): MetadataEntryDef[] {
+    const result: MetadataEntryDef[] = [];
+    this.metadataMap?.forEach((value, key) => result.push({ key, value }));
+    return result;
+  }
+
   async getCells(): Promise<CellModel[]> {
-    const componentPromises: Promise<any>[] = [];
-    for (const handle of this.cells.getItems(0)) {
-      componentPromises.push(handle.get());
-    }
+    const componentPromises: Promise<CellModel>[] =
+      this.cellOrder.getItems(0).map((cellId) => {
+        const handle = this.cellMap.get(cellId);
+        return handle.get();
+      });
     return Promise.all(componentPromises);
   }
 
   async getCell(id: string): Promise<CellModel | undefined> {
-    throw new Error("Method not implemented.");
-    // const cellHandle = await this.cellMap.get(id);
-    // const cellComponent: ISolidCell = await cellHandle.get();
-    // return cellComponent;
+    const cellHandle = await this.cellMap.get(id);
+    const cellComponent = await cellHandle.get();
+    return cellComponent;
   }
 
-  async insertCell(cell: CellDef, insertAt: number): Promise<CellModel> {
-    throw new Error("Method not implemented.");
-    // const cellHandle = await this.createCellComponent(cell);
-    // this.cellMap.set(cell.id, cellHandle);
-    // await this.enlistCell(cell.id, cellHandle);
-
-    // this.cellOrder.insert(insertAt, [cell.id]);
-
-    // const cellComponent = await cellHandle.get();
-    // return cellComponent;
+  async insertCell(input: CellInput, insertAt: number): Promise<CellModel> {
+    const component = await this.createCellComponent(input);
+    this.cellMap.set(component.id, component.handle);
+    this.cellOrder.insert(insertAt, [component.id]);
+    return component;
   }
 
   deleteCell(id: string): void {
-    throw new Error("Method not implemented.");
-    // const removeIndex = this.cellOrder.getItems(0).indexOf(id);
-    // if (removeIndex !== -1) {
-    //   this.cellOrder.remove(removeIndex, removeIndex + 1);
-    // }
-    // this.cellMap.delete(id);
+    const removeIndex = this.cellOrder.getItems(0).indexOf(id);
+    if (removeIndex !== -1) {
+      this.cellOrder.remove(removeIndex, removeIndex + 1);
+    }
+    this.cellMap.delete(id);
   }
-  replaceCell(id: string, cell: CellDef): Promise<void> {
+
+  replaceCell(id: string, cell: CellInput): Promise<void> {
     throw new Error("Method not implemented.");
   }
   moveCell(id: string, destId: string, above: boolean): void {
     throw new Error("Method not implemented.");
   }
 
-  async getMetadata(): Promise<MetadataEntryDef[]> {
-    const result: MetadataEntryDef[] = [];
-    this.metadata?.forEach((value, key) => result.push({ key, value }));
-    return result;
-  }
-
-  updateMetadata(parent: string, payload: any): void {
+  updateMetadata(parent: string, payload: unknown): void {
     throw new Error("Method not implemented.");
   }
   //#endregion
@@ -87,25 +83,28 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
   //#region DataObject
   protected async initializingFirstTime(input?: NotebookContentInput): Promise<void> {
     // this.debug("Initializing new component");
-    const cells = SharedObjectSequence.create<IFluidHandle>(this.runtime);
-    const metadata = SharedMap.create(this.runtime);
+    const cellMap = SharedMap.create(this.runtime);
+    const cellOrder = SharedObjectSequence.create<string>(this.runtime);
+    const metadataMap = SharedMap.create(this.runtime);
 
     if (input) {
-      const handles = [];
+      const cellIds = [];
       for (const cell of input.cells) {
-        const cellHandle = await this.createCellComponent(cell);
-        if (cellHandle) {
-          handles.push(cellHandle);
-        }
+        const { id, handle } = await this.createCellComponent(cell);
+        cellIds.push(id);
+        cellMap.set(id, handle);
       }
-      cells.insert(0, handles);
+      cellOrder.insert(0, cellIds);
 
       input.metadata?.forEach(({ key, value }) => {
-        metadata.set(key, value);
+        metadataMap.set(key, value);
       });
     }
 
-    this.root.set(CellsKey, cells.handle).set(MetadataKey, metadata.handle);
+    this.root
+      .set(CellsKey, cellMap.handle)
+      .set(CellOrderKey, cellOrder.handle)
+      .set(MetadataKey, metadataMap.handle);
   }
 
   protected async initializingFromExisting(): Promise<void> {
@@ -114,22 +113,22 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
 
   protected async hasInitialized(): Promise<void> {
     // this.debug("Component has initialized", this.runtime.documentId, this.url);
-    this.cells = await this.root.get(CellsKey)?.get();
-    this.metadata = await this.root.get(MetadataKey)?.get();
+    this.cellMap = await this.root.get(CellsKey)?.get();
+    this.cellOrder = await this.root.get(CellOrderKey)?.get();
+    this.metadataMap = await this.root.get(MetadataKey)?.get();
   }
   //#endregion
 
   //#region private
-  private async createCellComponent(cell: CellInput): Promise<IFluidHandle | undefined> {
-    let component;
+  private createCellComponent(cell: CellInput) {
     if ("code" in cell) {
-      component = await CodeCellDDS.Factory.createChildInstance(this.context, cell.code);
+      return CodeCellDDS.Factory.createChildInstance(this.context, cell.code);
     } else if ("markdown" in cell) {
-      component = await TextCellDDS.Factory.createChildInstance(this.context, cell.markdown);
+      return TextCellDDS.Factory.createChildInstance(this.context, cell.markdown);
     } else if ("raw" in cell) {
-      component = await TextCellDDS.Factory.createChildInstance(this.context, cell.raw);
+      return TextCellDDS.Factory.createChildInstance(this.context, cell.raw);
     }
-    return component?.handle;
+    throw new Error("Unsupported cell input type");
   }
   //#endregion
 }

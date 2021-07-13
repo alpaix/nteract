@@ -1,17 +1,19 @@
-import { Observable, Subject } from "rxjs";
+import { EMPTY, from, Observable, of, Subject } from "rxjs";
 import gql from "graphql-tag";
-import { ImmutableNotebook } from "@nteract/commutable";
-import { ContentRef, KernelRef } from "@nteract/types";
+import { ImmutableCell, ImmutableNotebook } from "@nteract/commutable";
+import { AppState, ContentRef, KernelRef } from "@nteract/types";
 import { actions as coreActions } from "@nteract/core";
 import { MythicAction } from "@nteract/myths";
 import namespaceDebug from "../common/debug";
-import { ICollaborationBackend, ICollaborationDriver } from "../types";
-import { joinSessionSucceeded } from "../myths";
-import { NotebookDef, UpsertNotebookInput } from "../backend/schema";
+import { CollabRootState, IActionRecorder, ICollaborationBackend, ICollaborationDriver } from "../types";
+import { deleteCellFromMap, joinSessionSucceeded, updateCellMap } from "../myths";
+import { InsertCellInput, NotebookDef, PatchCellSourceInput, UpsertNotebookInput } from "../backend/schema";
 import { ActionReplicator } from "./replicator";
-import { fromNotebookDef, makeContentInput } from "./conversions";
+import { fromNotebookDef, makeCellInput, makeContentInput } from "./conversions";
+import { catchError, map, switchMap } from "rxjs/operators";
+import { doesCellIdExistInMap, getRemoteCellId } from "../selectors";
 
-export class CollaborationDriver implements ICollaborationDriver {
+export class CollaborationDriver implements ICollaborationDriver, IActionRecorder {
   private readonly debug: debug.Debugger = namespaceDebug.extend("rtc", "|");
   constructor(
     private readonly backend: ICollaborationBackend,
@@ -19,7 +21,8 @@ export class CollaborationDriver implements ICollaborationDriver {
     private readonly contentRef: ContentRef
   ) { }
 
-  join(filePath: string, notebook: ImmutableNotebook, kernelRef: KernelRef): Observable<MythicAction<string, string, {}>> {
+  //#region ICollaborationDriver
+  join(filePath: string, notebook: ImmutableNotebook, kernelRef: KernelRef): Observable<MythicAction> {
     const actionStream = async (actions$: Subject<MythicAction>) => {
       await this.backend.start(filePath);
       await this.loadModel(filePath, notebook, kernelRef, actions$);
@@ -38,8 +41,86 @@ export class CollaborationDriver implements ICollaborationDriver {
   leave(): Observable<MythicAction<string, string, {}>> {
     throw new Error("Method not implemented.");
   }
+  //#endregion
+
+  //#region IActionRecorder
+  recordInsertCell(id: string, insertAt: number, cell: ImmutableCell): Observable<MythicAction> {
+    const mutation = gql`
+      mutation InsertCell($input: InsertCellInput!) {
+        insertCell(input: $input) {
+          id
+        }
+      }
+    `;
+    const insertP = this.backend.execute(mutation, {
+      input: {
+        insertAt,
+        cell: makeCellInput(cell)
+      } as InsertCellInput
+    });
+    const insert$ = from(insertP).pipe(
+      map(result => updateCellMap.create({ localId: id, remoteId: result.insertCell.id })),
+      catchError(error => {
+        console.log(error);
+        return EMPTY;
+      }));
+    return insert$;
+  }
+
+  recordDeleteCell(id: string): Observable<MythicAction> {
+    if (!doesCellIdExistInMap(this.state, id)) {
+      return EMPTY;
+    }
+    const remoteCellId = getRemoteCellId(this.state, id);
+    const mutation = gql`
+        mutation DeleteCell($cellId: ID!) {
+          deleteCell(id: $cellId)
+        }
+      `;
+    const deleteP = this.backend
+      .execute(mutation, {
+        cellId: remoteCellId
+      });
+    const delete$ = from(deleteP).pipe(
+      map(() => deleteCellFromMap.create({ localId: id })),
+      catchError(error => {
+        console.log(error);
+        return EMPTY;
+      }));
+    return delete$;
+  }
+
+  recordCellContent(id: string, value: string): Observable<MythicAction> {
+    const remoteCellId = getRemoteCellId(this.state, id) ?? id;
+    const mutation = gql`
+      mutation PatchCellSource($input: PatchCellSourceInput!) {
+        patchCellSource(input: $input)
+      }
+    `;
+    const updateP = this.backend
+      .execute(mutation, {
+        input: {
+          id: remoteCellId,
+          type: "replace",
+          diff: value
+        } as PatchCellSourceInput
+      });
+
+    const update$ = from(updateP).pipe(
+      switchMap(() => EMPTY),
+      catchError(error => {
+        console.log(error);
+        return EMPTY;
+      }));
+    return update$;
+  }
+  //#endregion
 
   //#region private
+  private get state(): CollabRootState {
+    return this.store.getState();
+  }
+
   private async loadModel(filePath: string, notebook: ImmutableNotebook, kernelRef: KernelRef, actions$: Subject<MythicAction>) {
     try {
       const mutation = gql`
@@ -146,9 +227,6 @@ export class CollaborationDriver implements ICollaborationDriver {
         origin: "remote"
       } as any)
     );
-
-    // actions$.next(initializeCellMap.create({ notebook: content, contentRef: this.contentRef }));
-    // updateCellMap.create({ localId: cell.id, remoteId: cell.id });
   }
   //#endregion
 }

@@ -15,7 +15,7 @@ const SourceKey = "source";
  */
 export class CodeCellDDS extends DataObject<{}, CodeCellInput> implements ICodeCell {
   public static DataObjectName = "code-cell";
-  private metadata: ISharedMap | undefined;
+  private metadataMap: ISharedMap | undefined;
   private outputs: SharedObjectSequence<ICellOutput> | undefined;
   private source: SharedString | undefined;
 
@@ -31,14 +31,14 @@ export class CodeCellDDS extends DataObject<{}, CodeCellInput> implements ICodeC
     return "CodeCell";
   }
 
-  getExecutionCount(): number | undefined {
+  get executionCount(): number | undefined {
     const executionCount = this.root.get<number>(ExecutionCountKey);
     return executionCount;
   }
 
-  getMetadata(): MetadataEntryDef[] {
+  get metadata(): MetadataEntryDef[] {
     const result: MetadataEntryDef[] = [];
-    this.metadata?.forEach((value, key) => result.push({ key, value }));
+    this.metadataMap?.forEach((value, key) => result.push({ key, value }));
     return result;
   }
 
@@ -92,7 +92,7 @@ export class CodeCellDDS extends DataObject<{}, CodeCellInput> implements ICodeC
   protected async hasInitialized(): Promise<void> {
     // cache frequently accessed properties
     this.source = await this.root.get<IFluidHandle<SharedString>>(SourceKey)?.get();
-    this.metadata = await this.root.get<IFluidHandle<SharedMap>>(MetadataKey)?.get();
+    this.metadataMap = await this.root.get<IFluidHandle<SharedMap>>(MetadataKey)?.get();
     this.outputs = await this.root.get<IFluidHandle<SharedObjectSequence<ICellOutput>>>(OutputsKey)?.get();
   }
   //#endregion

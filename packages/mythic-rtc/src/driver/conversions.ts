@@ -117,22 +117,24 @@ function makeRawCellInput(cell: ImmutableRawCell): CellInput {
   };
 }
 
+export function makeCellInput(cell: ImmutableCell): CellInput {
+  switch (cell.cell_type) {
+    case "code":
+      return makeCodeCellInput(cell);
+    case "markdown":
+      return makeMarkdownCellInput(cell);
+    case "raw":
+      return makeRawCellInput(cell);
+  }
+}
+
 export function makeContentInput(notebook: ImmutableNotebook): NotebookContentInput {
   const cells = [] as CellInput[];
-  for (const cellId of notebook.cellOrder) {
-    const cell = notebook.cellMap.get(cellId);
-    switch (cell?.cell_type) {
-      case "code":
-        cells.push(makeCodeCellInput(cell));
-        break;
-      case "markdown":
-        cells.push(makeMarkdownCellInput(cell));
-        break;
-      case "raw":
-        cells.push(makeRawCellInput(cell));
-        break;
+  notebook.cellOrder.map(cellId => notebook.cellMap.get(cellId)).forEach((cell) => {
+    if (cell) {
+      cells.push(makeCellInput(cell));
     }
-  }
+  });
 
   return { cells, metadata: makeMetadataInput(notebook) };
 }

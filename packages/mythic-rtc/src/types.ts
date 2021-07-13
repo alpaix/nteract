@@ -4,7 +4,7 @@ import { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
 import { Maybe } from "graphql/jsutils/Maybe";
 import { ImmutableCell, ImmutableNotebook } from "@nteract/commutable";
 import { KernelRef } from "@nteract/types";
-import { MythicAction } from "@nteract/myths";
+import { MythicAction, RootState } from "@nteract/myths";
 
 export type ExecuteResult = { [key: string]: any };
 
@@ -43,3 +43,5 @@ export interface ICollaborationState {
   cellIdMap: Immutable.Map<string, string>;
   reverseCellIdMap: Immutable.Map<string, string>;
 }
+
+export type CollabRootState = RootState<"collaboration", ICollaborationState>;

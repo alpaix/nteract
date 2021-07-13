@@ -14,7 +14,7 @@ const MetadataKey = "metadata";
 export class TextCellDDS extends DataObject<{}, TextCellInput> implements IMarkdownCell {
   public static DataObjectName = "text-cell";
   private source: SharedString | undefined;
-  private metadata: ISharedMap | undefined;
+  private metadataMap: ISharedMap | undefined;
 
   public static readonly Factory = new DataObjectFactory(
     TextCellDDS.DataObjectName,
@@ -33,9 +33,9 @@ export class TextCellDDS extends DataObject<{}, TextCellInput> implements IMarkd
     return this.source!;
   }
 
-  getMetadata(): MetadataEntryDef[] {
+  get metadata(): MetadataEntryDef[] {
     const result: MetadataEntryDef[] = [];
-    this.metadata?.forEach((value, key) => result.push({ key, value }));
+    this.metadataMap?.forEach((value, key) => result.push({ key, value }));
     return result;
   }
   //#endregion
@@ -58,7 +58,7 @@ export class TextCellDDS extends DataObject<{}, TextCellInput> implements IMarkd
 
   protected async hasInitialized(): Promise<void> {
     this.source = await this.root.get<IFluidHandle<SharedString>>(SourceKey)?.get();
-    this.metadata = await this.root.get<IFluidHandle<SharedMap>>(MetadataKey)?.get();
+    this.metadataMap = await this.root.get<IFluidHandle<SharedMap>>(MetadataKey)?.get();
   }
   //#endregion
 }
