@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Observable, Subject } from "rxjs";
+import { EMPTY, fromEvent, Observable, of, Subject, Subscription } from "rxjs";
+import { filter, map, mergeMap } from "rxjs/operators";
 import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
+import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { SharedObjectSequence } from "@fluidframework/sequence";
-import { ISharedMap, SharedMap, IValueChanged } from "@fluidframework/map";
-import { CellDef, CellInput, MetadataEntryDef, NotebookContentInput } from "../schema";
-import { CellOrderEvent, ICellSourceEvent, ICell, ISolidModel, CellModel } from "./types";
+import { SequenceDeltaEvent, SharedObjectSequence, SharedString } from "@fluidframework/sequence";
+import { ISharedMap, SharedMap } from "@fluidframework/map";
+import { CellInput, MetadataEntryDef, NotebookContentInput } from "../schema";
+import { CellOrderEvent, ICellSourceEvent, INotebookModel, CellModel, ICellInsertedEvent, ICellRemovedEvent, ICellMovedEvent } from "./types";
 import { CodeCellDDS } from "./codeCell";
 import { TextCellDDS } from "./textCell";
 
@@ -13,11 +14,12 @@ const CellsKey = "cells";
 const CellOrderKey = "cellOrder";
 const MetadataKey = "metadata";
 
-export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements ISolidModel {
+export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements INotebookModel {
   public static DataObjectName = "notebook-model";
   private cellMap!: ISharedMap;
   private cellOrder!: SharedObjectSequence<string>;
   private metadataMap!: ISharedMap;
+  private readonly subscriptions: Subscription[] = [];
 
   public static readonly Factory = new DataObjectFactory(
     NotebookDDS.DataObjectName,
@@ -27,10 +29,10 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
     [CodeCellDDS.Factory.registryEntry, TextCellDDS.Factory.registryEntry]
   );
 
-  //#region ISolidCell
-  cells$: Observable<CellOrderEvent> = new Subject();
+  //#region ISolidModel
+  cells$!: Observable<CellOrderEvent>;
 
-  source$: Observable<ICellSourceEvent> = new Subject();
+  source$ = new Subject<ICellSourceEvent>();
 
   get metadata(): MetadataEntryDef[] {
     const result: MetadataEntryDef[] = [];
@@ -116,6 +118,8 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
     this.cellMap = await this.root.get(CellsKey)?.get();
     this.cellOrder = await this.root.get(CellOrderKey)?.get();
     this.metadataMap = await this.root.get(MetadataKey)?.get();
+
+    await this.setupObservables();
   }
   //#endregion
 
@@ -129,6 +133,65 @@ export class NotebookDDS extends DataObject<{}, NotebookContentInput> implements
       return TextCellDDS.Factory.createChildInstance(this.context, cell.raw);
     }
     throw new Error("Unsupported cell input type");
+  }
+
+  private async setupObservables() {
+    this.cells$ = fromEvent<[ISequencedDocumentMessage, boolean]>(this.cellOrder, "op").pipe(
+      filter(([, local]) => !local),
+      mergeMap(([op]) => {
+        const delta = op.contents;
+        // TODO: use partition operator
+        switch (delta.type) {
+          case 0: // MergeTreeDeltaType.INSERT:
+            if (typeof delta.pos1 === "number" && delta.seg && delta.seg.items instanceof Array) {
+              // TODO: Insert a range of cells
+              const newCellId = delta.seg.items[0];
+              return of<ICellInsertedEvent>({ event: "CellInsertedEvent", id: newCellId, pos: delta.pos1 });
+            }
+            break;
+          case 1: // MergeTreeDeltaType.REMOVE:
+            if (typeof delta.pos1 === "number" && typeof delta.pos2 === "number") {
+              // This returns a range [pos1 ,pos2)
+              // TODO: Delete a range of cells
+              return of<ICellRemovedEvent>({ event: "CellRemovedEvent", pos: delta.pos1 });
+            }
+            break;
+          case 3: // MergeTreeDeltaType.GROUP:
+            if (delta && delta.ops instanceof Array && delta.ops.length === 2) {
+              // We represent a Move Cell Op using a group op combining 2 ops
+              // 1. RemoveOp to delete the source ID
+              // 2. InsertOp to insert the source ID at the destination
+              const removeOp = delta.ops[0];
+              const insertOp = delta.ops[1];
+              return of<ICellMovedEvent>({ event: "CellMovedEvent", pos1: removeOp.pos1, pos2: insertOp.pos1 });
+            }
+            break;
+        }
+        return EMPTY;
+      })
+    );
+
+    this.subscriptions.push(
+      this.cells$.subscribe(async (event) => {
+        if (event.event == "CellInsertedEvent") {
+          const cellHandle = await this.cellMap.get(event.id);
+          await this.enlistCell(event.id, cellHandle);
+        }
+      })
+    );
+
+    for (const [cellId, cellHandle] of this.cellMap.entries()) {
+      await this.enlistCell(cellId, cellHandle);
+    }
+  }
+
+  private async enlistCell(cellId: string, cellHandle: IFluidHandle<any>) {
+    const cell: CellModel = await cellHandle.get();
+    const ss$ = fromEvent<[SequenceDeltaEvent, SharedString]>(cell.getSource(), "sequenceDelta").pipe(
+      filter(([event]) => !event.isLocal),
+      map(([, ss]) => ({ id: cellId, type: "replace", diff: ss.getText() } as ICellSourceEvent))
+    );
+    this.subscriptions.push(ss$.subscribe(this.source$));
   }
   //#endregion
 }

@@ -18,6 +18,7 @@ import {
   MediaBundle
 } from "@nteract/commutable";
 import {
+  CellDef,
   CellInput,
   CellOutputDef,
   CodeCellDef,
@@ -196,17 +197,20 @@ export function fromMarkdownCellDef({ source, metadata }: MarkdownCellDef): Immu
 //   return result;
 // }
 
+export function fromCellDef(cell: CellDef): ImmutableCell {
+  switch (cell.__typename) {
+    case "CodeCell":
+      return fromCodeCellDef(cell);
+    case "MarkdownCell":
+      return fromMarkdownCellDef(cell);
+    case "RawCell":
+      return fromMarkdownCellDef(cell as any);
+  }
+}
+
 export function fromNotebookDef(notebookDef: NotebookDef): ImmutableNotebook {
-  const notebookCells = notebookDef.cells.nodes.map((remoteCell): [string, ImmutableCell] => {
-    switch (remoteCell.__typename) {
-      case "CodeCell":
-        return [remoteCell.id, fromCodeCellDef(remoteCell)];
-      case "MarkdownCell":
-        return [remoteCell.id, fromMarkdownCellDef(remoteCell)];
-      case "RawCell":
-        return [remoteCell.id, fromMarkdownCellDef(remoteCell as any)];
-    }
-  });
+  const notebookCells = notebookDef.cells.nodes.map(
+    (value): [string, ImmutableCell] => [value.id, fromCellDef(value)]);
 
   const notebook = makeNotebookRecord({
     nbformat: 4,

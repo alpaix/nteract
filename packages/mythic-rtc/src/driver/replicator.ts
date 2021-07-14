@@ -5,16 +5,18 @@ import { CellId, createCodeCell } from "@nteract/commutable";
 import { AppState, ContentRef, NotebookModel } from "@nteract/types";
 import { MythicAction } from "@nteract/myths";
 import { selectors as coreSelectors, actions as coreActions } from "@nteract/core";
-// import { SolidStore } from "../../store";
-import { ICollaborationBackend } from "../types";
+import { CollabRootState, ICollaborationBackend } from "../types";
 import { getLocalCellId } from "../selectors";
+import { ICellInsertedEvent, ICellRemovedEvent } from "../backend/model";
+import { fromCellDef } from "./conversions";
 
 export class ActionReplicator {
   constructor(
     private readonly actions$: Subject<MythicAction>,
     private readonly backend: ICollaborationBackend,
     private readonly store: any, // SolidStore,
-    private readonly contentRef: ContentRef
+    private readonly contentRef: ContentRef,
+    private readonly notebookId: string
   ) {}
 
   subscribe(): Promise<unknown> {
@@ -98,9 +100,12 @@ export class ActionReplicator {
    * Merge an insert operation.
    * @param delta The insert message
    */
-  private async mergeInsertCellDelta(delta: any /*ICellInsertedEvent*/) {
+  private async mergeInsertCellDelta(delta: ICellInsertedEvent) {
     const remoteCellId = delta.id;
     const remoteCell = await this.fetchRemoteCell(remoteCellId);
+    if (!remoteCell) {
+      return;
+    }
 
     let insertAfterId;
     const cellList = this.getCellList();
@@ -116,8 +121,8 @@ export class ActionReplicator {
         coreActions.createCellAbove({
           id: insertBeforeId,
           contentRef: this.contentRef,
-          cellType: "code", // remoteCell.cell_type,
-          cell: createCodeCell({ id: remoteCellId, source: remoteCell.source }), // remoteCell
+          cellType: remoteCell.cell_type,
+          cell: remoteCell,
           origin: "remote",
           remoteCellId
         } as any)
@@ -127,8 +132,8 @@ export class ActionReplicator {
         coreActions.createCellBelow({
           id: insertAfterId,
           contentRef: this.contentRef,
-          cellType: "code", // remoteCell.cell_type,
-          cell: createCodeCell({ id: remoteCellId, source: remoteCell.source }),
+          cellType: remoteCell.cell_type,
+          cell: remoteCell,
           origin: "remote",
           remoteCellId
         } as any)
@@ -140,7 +145,7 @@ export class ActionReplicator {
    * Merge remote Cell deletion by dispatching deleteCell Redux action
    * @param delta CellRemovedEvent
    */
-  private mergeRemoveCellDelta(delta: any /*ICellRemovedEvent*/) {
+  private mergeRemoveCellDelta(delta: ICellRemovedEvent) {
     // This returns a range [pos1 ,pos2)
     // We need to find cell at index pos1 from the local redux store and delete it.
     // TODO: Delete range of cells
@@ -160,28 +165,68 @@ export class ActionReplicator {
 
   private async fetchRemoteCell(cellId: string) {
     const query = gql`
-      query getCellById($cellId: ID!) {
-        notebook(filePath: "./Default.ipynb") {
+      query getCellById($notebookId: ID!, $cellId: ID!) {
+        notebook(id: $notebookId) {
           cell(id: $cellId) {
             __typename
             id
             source
+            metadata {
+              key
+              value
+            }
+            ... on CodeCell {
+              executionCount
+              outputs {
+                __typename
+                ... on ExecuteResult {
+                  executionCount
+                  data {
+                    key
+                    value
+                  }
+                  metadata {
+                    key
+                    value
+                  }
+                }
+                ... on DisplayData {
+                  data {
+                    key
+                    value
+                  }
+                  metadata {
+                    key
+                    value
+                  }
+                }
+                ... on StreamOutput {
+                  name
+                  text
+                }
+                ... on ErrorOutput {
+                  ename
+                  evalue
+                  traceback
+                }
+              }
+            }
           }
         }
       }
     `;
-    const result = await this.backend.execute(query, { cellId });
+    const result = await this.backend.execute(query, { notebookId: this.notebookId, cellId });
 
-    if (result.errors || !result.data) {
+    if (!result.notebook?.cell) {
       console.log(result);
       return null;
     }
 
-    const { cell: remoteCell } = result.data.notebook;
+    const remoteCell = fromCellDef(result.notebook.cell);
     return remoteCell;
   }
 
-  get state(): AppState {
+  get state(): CollabRootState & AppState {
     return this.store.getState();
   }
 

@@ -1,13 +1,13 @@
-import { EMPTY, from, Observable, of, Subject } from "rxjs";
+import { EMPTY, from, Observable, Subject } from "rxjs";
 import gql from "graphql-tag";
 import { ImmutableCell, ImmutableNotebook } from "@nteract/commutable";
-import { AppState, ContentRef, KernelRef } from "@nteract/types";
+import { ContentRef, KernelRef } from "@nteract/types";
 import { actions as coreActions } from "@nteract/core";
 import { MythicAction } from "@nteract/myths";
 import namespaceDebug from "../common/debug";
 import { CollabRootState, IActionRecorder, ICollaborationBackend, ICollaborationDriver } from "../types";
 import { deleteCellFromMap, joinSessionSucceeded, updateCellMap } from "../myths";
-import { InsertCellInput, NotebookDef, PatchCellSourceInput, UpsertNotebookInput } from "../backend/schema";
+import { InsertCellInput, NotebookDef, PatchCellSourceInput, UpsertNotebookInput, UpsertNotebookPayload } from "../backend/schema";
 import { ActionReplicator } from "./replicator";
 import { fromNotebookDef, makeCellInput, makeContentInput } from "./conversions";
 import { catchError, map, switchMap } from "rxjs/operators";
@@ -25,8 +25,8 @@ export class CollaborationDriver implements ICollaborationDriver, IActionRecorde
   join(filePath: string, notebook: ImmutableNotebook, kernelRef: KernelRef): Observable<MythicAction> {
     const actionStream = async (actions$: Subject<MythicAction>) => {
       await this.backend.start(filePath);
-      await this.loadModel(filePath, notebook, kernelRef, actions$);
-      const replicator = new ActionReplicator(actions$, this.backend, this.store, this.contentRef);
+      const notebookId = await this.loadModel(filePath, notebook, kernelRef, actions$);
+      const replicator = new ActionReplicator(actions$, this.backend, this.store, this.contentRef, notebookId);
       replicator.subscribe();
       actions$.next(joinSessionSucceeded.create());
       //actions$.complete();
@@ -184,15 +184,16 @@ export class CollaborationDriver implements ICollaborationDriver, IActionRecorde
         }
       `;
       const contentInput = makeContentInput(notebook);
-      const upsert = await this.backend.execute(mutation, {
+      const { upsertNotebook } = await this.backend.execute(mutation, {
         input: {
           filePath,
           content: contentInput
         } as UpsertNotebookInput
       });
-      this.debug("Upserted notebook", upsert);
+      // this.debug("Upserted notebook", upsertNotebook);
 
-      this.createNotebook(actions$, filePath, upsert.upsertNotebook.notebook, kernelRef);
+      this.createNotebook(actions$, filePath, upsertNotebook.notebook, kernelRef);
+      return upsertNotebook.notebook.id;
     } catch (error) {
       this.debug(error);
     }

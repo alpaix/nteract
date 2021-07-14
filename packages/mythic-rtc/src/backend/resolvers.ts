@@ -2,7 +2,7 @@
 import { Subject } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { ResolverContext } from "./context";
-import { CellModel, CellOrderEvent, ICellOutput, ICodeCell, ISolidModel } from "./model";
+import { CellModel, CellOrderEvent, ICellOutput, ICodeCell, INotebookModel } from "./model";
 import { InsertCellInput, PatchCellSourceInput, UpsertNotebookInput } from "./schema";
 
 const QueryResolver = {
@@ -69,7 +69,7 @@ const NotebookResolver = {
   //   return model.id;
   // },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async cells(solidModel: ISolidModel, args: { first: number } /*, context: any, info: any*/) {
+  async cells(solidModel: INotebookModel, args: { first: number } /*, context: any, info: any*/) {
     const cells = await solidModel.getCells();
     return {
       edges: [],
@@ -78,7 +78,7 @@ const NotebookResolver = {
       totalCount: cells.length
     };
   },
-  async cell(solidModel: ISolidModel, args: { id: string }) {
+  async cell(solidModel: INotebookModel, args: { id: string }) {
     const cell = await solidModel.getCell(args.id);
     return cell;
   }

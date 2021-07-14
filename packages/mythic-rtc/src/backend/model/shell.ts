@@ -20,9 +20,14 @@ export class ShellDDS extends DataObject {
   ]);
 
   async upsertModel(input: UpsertNotebookInput): Promise<NotebookDDS> {
-    const component = await NotebookDDS.Factory.createChildInstance(this.context, input.content);
-    this.root.set(ModelKey, component.handle);
-    return component;
+    if (this.root.has(ModelKey)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return (await this.getModel())!;
+    } else {
+      const component = await NotebookDDS.Factory.createChildInstance(this.context, input.content);
+      this.root.set(ModelKey, component.handle);
+      return component;
+    }
   }
 
   async getModel(): Promise<NotebookDDS | undefined> {
@@ -30,15 +35,6 @@ export class ShellDDS extends DataObject {
     const notebookComponent = await componentHandle?.get();
     return notebookComponent;
   }
-
-  //   async getModel(): Promise<ISolidModel | undefined> {
-  //     const componentHandle: IFluidHandle<SolidModel> = this.notebookSlot.get();
-  //     if (componentHandle) {
-  //       const notebookComponent = await componentHandle.get();
-  //       return notebookComponent;
-  //     }
-  //     return undefined;
-  //   }
 
   //#region DataObject
   protected async initializingFirstTime(): Promise<void> {

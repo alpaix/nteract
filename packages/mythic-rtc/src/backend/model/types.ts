@@ -1,11 +1,11 @@
 import { Observable } from "rxjs";
 import { SharedString } from "@fluidframework/sequence";
-import { CellDef, CellInput, MetadataEntryDef } from "../schema";
+import { CellInput, MetadataEntryDef } from "../schema";
 
 /**
  * Describes the public API surface for our Fluid DataObject.
  */
-export interface ISolidModel {
+export interface INotebookModel {
   readonly cells$: Observable<CellOrderEvent>;
   readonly source$: Observable<ICellSourceEvent>;
   readonly metadata: MetadataEntryDef[];
